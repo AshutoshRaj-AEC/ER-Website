@@ -1,6 +1,9 @@
 const HeroSection = () => {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-white">
+    <section
+      id="top"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-6 pt-24 text-white sm:px-10"
+    >
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
@@ -24,32 +27,42 @@ const HeroSection = () => {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl animate-[fadeUp_900ms_ease-out_forwards] flex-col items-center px-6 text-center opacity-0 sm:px-10">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl animate-[fadeUp_900ms_ease-out_forwards] flex-col items-center text-center opacity-0">
         <p className="mb-4 text-xs font-semibold uppercase tracking-[0.45em] text-orange-300 sm:text-sm">
           Independent Music Label
         </p>
 
-        <h1 className="max-w-4xl text-5xl font-black uppercase tracking-[0.08em] text-white sm:text-6xl md:text-7xl lg:text-8xl">
-          EklautA Records
+        <h1 className="max-w-5xl font-['Space_Grotesk'] text-5xl font-black uppercase tracking-[0.08em] text-white sm:text-6xl md:text-7xl lg:text-8xl">
+          EklautA
+          <span className="block text-orange-400">Records</span>
         </h1>
 
-        <p className="mt-6 max-w-2xl text-lg text-zinc-200 sm:text-xl md:text-2xl">
-          Be Unique In Play.
+        <p className="mt-6 max-w-3xl text-lg leading-8 text-zinc-200 sm:text-xl md:text-2xl">
+          A bold home for original artists, unforgettable releases, and a sound
+          that refuses to blend into the background.
         </p>
 
         <div className="mt-10 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
           <a
-            href="#listen"
+            href="#releases"
             className="w-full rounded-full bg-orange-500 px-8 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white transition duration-300 hover:scale-105 hover:bg-orange-400 hover:shadow-[0_0_35px_rgba(249,115,22,0.45)] focus:outline-none focus:ring-2 focus:ring-orange-300 sm:w-auto"
           >
-            Listen Now
+            Latest Releases
           </a>
           <a
-            href="#contact"
+            href="#artists"
             className="w-full rounded-full border border-white/30 bg-white/10 px-8 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-sm transition duration-300 hover:scale-105 hover:border-orange-300 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-orange-300 sm:w-auto"
           >
-            Contact Us
+            Explore Artists
           </a>
+        </div>
+
+        <div className="mt-14 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-xs font-semibold uppercase tracking-[0.35em] text-stone-300 sm:text-sm">
+          <span>Be Unique In Play</span>
+          <span className="h-2 w-2 rounded-full bg-orange-400" />
+          <span>Artist Management</span>
+          <span className="h-2 w-2 rounded-full bg-orange-400" />
+          <span>Label Vision</span>
         </div>
       </div>
 
