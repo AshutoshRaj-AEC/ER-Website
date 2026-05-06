@@ -1,33 +1,34 @@
+import ashuBoyImage from "../AshuBOY-optimized.jpg";
+import authorityImage from "../Authority.jpg";
+import naamNamahImage from "../naam namah.jpeg";
+import dhrooVoidImage from "../dhroovoid.jpeg";
+import rapStreetTeacherImage from "../rap street teacher.jpeg";
+
 const artists = [
   {
     name: "AshuBOY",
     role: "Versatile Rapper / Hindi Hip-Hop / Spiritual Rap / Storytelling / Remix Artist",
-    image:
-      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80",
+    image: ashuBoyImage,
   },
   {
     name: "Naam Namah",
     role: "Hindi Hip-Hop / Spiritual Rap / Storytelling",
-    image:
-      "https://images.unsplash.com/photo-1487180144351-b8472da7d491?auto=format&fit=crop&w=900&q=80",
+    image: naamNamahImage,
   },
   {
     name: "DhrooVoid",
     role: "Remix Artist / Spiritual Rap",
-    image:
-      "https://images.unsplash.com/photo-1501612780327-45045538702b?auto=format&fit=crop&w=900&q=80",
+    image: dhrooVoidImage,
   },
   {
     name: "Rap Street Teacher",
     role: "Hip-Hop Artist / Talent Promoter / Rap Battle Platform",
-    image:
-      "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=900&q=80",
+    image: rapStreetTeacherImage,
   },
   {
-    name: "Authority",
+    name: "Autho₹ity",
     role: "Hindi Hip-Hop / Hardcore Underground / Storytelling",
-    image:
-      "https://images.unsplash.com/photo-1508973378895-3db361f1c4f5?auto=format&fit=crop&w=900&q=80",
+    image: authorityImage,
   },
 ];
 
