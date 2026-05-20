@@ -1,8 +1,8 @@
 import ashuBoyImage from "../AshuBOY-optimized.jpg";
 import authorityImage from "../Authority.jpg";
-import naamNamahImage from "../naam namah.jpeg";
-import dhrooVoidImage from "../dhroovoid.jpeg";
-import rapStreetTeacherImage from "../rap street teacher.jpeg";
+import naamNamahImage from "../Naam Namah.jpeg";
+import dhrooVoidImage from "../DhrooVoid.jpeg";
+import rapStreetTeacherImage from "../Rap Street Teacher.jpeg";
 
 const artists = [
   {
