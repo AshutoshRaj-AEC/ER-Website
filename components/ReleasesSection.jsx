@@ -1,12 +1,12 @@
 import { useRef } from "react";
-import aigiriNandiniPoster from "../Posters/Aigiri Nandini X Aatma Rama.jpg";
-import aisoDeenDayalPoster from "../Posters/Aiso Deen Dayal (Dhan Dhan Bholenath).png";
-import anantShrutiPoster from "../Posters/Anant Shruti enhanced.jpg";
-import bholaPoster from "../Posters/Bhola.jpg";
-import chandrachoodaPoster from "../Posters/Chandrachooda Shiva Shankara Parvati.jpg";
-import durgaShaktiPoster from "../Posters/Durga Shakti (Sarva Mangal Mangalye).jpg";
-import heyMarutiPoster from "../Posters/Hey Maruti.jpg";
-import kalyugVsMahadevPoster from "../Posters/Kalyug Vs Mahadev.png";
+import aigiriNandiniPoster from "../posters/Aigiri Nandini X Aatma Rama.jpg";
+import aisoDeenDayalPoster from "../posters/Aiso Deen Dayal (Dhan Dhan Bholenath).png";
+import anantShrutiPoster from "../posters/Anant Shruti enhanced.jpg";
+import bholaPoster from "../posters/Bhola.jpg";
+import chandrachoodaPoster from "../posters/Chandrachooda Shiva Shankara Parvati.jpg";
+import durgaShaktiPoster from "../posters/Durga Shakti (Sarva Mangal Mangalye).jpg";
+import heyMarutiPoster from "../posters/Hey Maruti.jpg";
+import kalyugVsMahadevPoster from "../posters/Kalyug Vs Mahadev.png";
 
 const ChevronLeft = ({ className = "", size = 28 }) => (
   <svg
@@ -43,84 +43,143 @@ const ChevronRight = ({ className = "", size = 28 }) => (
 const releases = [
   {
     title: "Aigiri Nandini X Aatma Rama",
-    artist: "EklautA Records",
     type: "Music Video",
-    year: "2024",
     image: aigiriNandiniPoster,
-    href: "https://youtu.be/KAe4mdXyhXk?si=tSdJN6pEruaiBKR_%3Fsub_confirmation%3D1",
-    cta: "Watch now",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      {
+        label: "YouTube",
+        href: "https://youtu.be/KAe4mdXyhXk?si=tSdJN6pEruaiBKR_%3Fsub_confirmation%3D1",
+      },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
   {
     title: "Aiso Deen Dayal",
-    artist: "EklautA Records",
     type: "Single",
-    year: "2024",
     image: aisoDeenDayalPoster,
-    href: "https://www.instagram.com/eklautarecords/",
-    cta: "See update",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      { label: "YouTube", href: "https://www.youtube.com/" },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
   {
     title: "Anant Shruti",
-    artist: "EklautA Records",
-    type: "Release",
-    year: "2026",
+    type: "Album",
     image: anantShrutiPoster,
-    href: "https://www.instagram.com/eklautarecords/",
-    cta: "Explore art",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      { label: "YouTube", href: "https://www.youtube.com/" },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
   {
     title: "Bhola",
-    artist: "EklautA Records",
-    type: "Single",
-    year: "2024",
+    type: "Instagram Reel",
     image: bholaPoster,
-    href: "https://www.instagram.com/eklautarecords/",
-    cta: "View poster",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      { label: "YouTube", href: "https://www.youtube.com/" },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
   {
     title: "Chandrachooda Shiva Shankara Parvati",
-    artist: "EklautA Records",
-    type: "Release",
-    year: "2025",
+    type: "Single",
     image: chandrachoodaPoster,
-    href: "https://www.instagram.com/eklautarecords/",
-    cta: "Stay tuned",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      { label: "YouTube", href: "https://www.youtube.com/" },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
   {
     title: "Durga Shakti",
-    artist: "EklautA Records",
     type: "Music Video",
-    year: "2025",
     image: durgaShaktiPoster,
-    href: "https://www.instagram.com/eklautarecords/",
-    cta: "Follow drop",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      { label: "YouTube", href: "https://www.youtube.com/" },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
   {
     title: "Hey Maruti",
-    artist: "EklautA Records",
     type: "Single",
-    year: "2024",
     image: heyMarutiPoster,
-    href: "https://www.instagram.com/eklautarecords/",
-    cta: "See teaser",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      { label: "YouTube", href: "https://www.youtube.com/" },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
   {
     title: "Kalyug Vs Mahadev",
-    artist: "EklautA Records",
     type: "Release",
-    year: "2023",
     image: kalyugVsMahadevPoster,
-    href: "https://www.instagram.com/eklautarecords/",
-    cta: "Open artwork",
+    listenLinks: [
+      { label: "Spotify", href: "https://open.spotify.com/" },
+      { label: "YT Music", href: "https://music.youtube.com/" },
+    ],
+    watchLinks: [
+      { label: "YouTube", href: "https://www.youtube.com/" },
+      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
+    ],
   },
 ];
+
+const linkGroupClass =
+  "inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-300 transition hover:text-orange-200";
 
 const ReleasesSection = () => {
   const scrollerRef = useRef(null);
 
   const scrollReleases = (direction) => {
-    scrollerRef.current?.scrollBy({
-      left: direction * 360,
+    const container = scrollerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const scrollAmount = 360;
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    const nextScrollLeft = container.scrollLeft + direction * scrollAmount;
+    const edgeThreshold = 24;
+
+    if (direction > 0 && nextScrollLeft >= maxScrollLeft - edgeThreshold) {
+      container.scrollTo({ left: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (direction < 0 && container.scrollLeft <= edgeThreshold) {
+      container.scrollTo({ left: maxScrollLeft, behavior: "smooth" });
+      return;
+    }
+
+    container.scrollBy({
+      left: direction * scrollAmount,
       behavior: "smooth",
     });
   };
@@ -140,9 +199,8 @@ const ReleasesSection = () => {
             Latest Releases
           </h2>
           <p className="max-w-xl text-sm leading-7 text-stone-400 sm:text-base">
-            This catalog is still growing. For now, the section highlights the
-            current YouTube release and the next wave of artist drops taking
-            shape under EklautA Records.
+            A scrollable shelf of EklautA Records posters with direct paths to
+            listen and watch across music and social platforms.
           </p>
         </div>
 
@@ -198,31 +256,50 @@ const ReleasesSection = () => {
                     />
                   </div>
 
-                  <div className="space-y-3 px-0 pb-2 pt-5">
-                    <div className="flex items-end justify-between gap-4">
-                      <div className="min-w-0">
-                        <h3 className="truncate font-mono text-2xl font-bold uppercase tracking-[0.04em] text-white">
-                          {release.title}
-                        </h3>
-                        <p className="mt-1 text-sm uppercase tracking-[0.06em] text-stone-400">
-                          {release.artist}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.28em] text-orange-300">
+                  <div className="space-y-4 px-0 pb-2 pt-5">
+                    <div className="space-y-3">
+                      <h3 className="font-mono text-2xl font-bold uppercase tracking-[0.04em] text-white">
+                        {release.title}
+                      </h3>
+                      <span className="inline-flex rounded-full border border-orange-400/35 bg-orange-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-orange-300">
                         {release.type}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
-                      <span className="text-sm text-stone-500">{release.year}</span>
-                      <a
-                        href={release.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.28em] text-stone-300 transition hover:text-orange-200"
-                      >
-                        {release.cta}
-                      </a>
+                    <div className="border-t border-white/10 pt-4">
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.28em] text-stone-500">
+                          Listen
+                        </span>
+                        {release.listenLinks.map((link) => (
+                          <a
+                            key={`${release.title}-${link.label}`}
+                            href={link.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={linkGroupClass}
+                          >
+                            {link.label}
+                          </a>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.28em] text-stone-500">
+                          Watch
+                        </span>
+                        {release.watchLinks.map((link) => (
+                          <a
+                            key={`${release.title}-${link.label}`}
+                            href={link.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={linkGroupClass}
+                          >
+                            {link.label}
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </article>
