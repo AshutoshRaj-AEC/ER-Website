@@ -1,12 +1,12 @@
 import { useRef } from "react";
-import aigiriNandiniPoster from "../posters/Aigiri Nandini X Aatma Rama.jpg";
-import aisoDeenDayalPoster from "../posters/Aiso Deen Dayal (Dhan Dhan Bholenath).png";
-import anantShrutiPoster from "../posters/Anant Shruti enhanced.jpg";
-import bholaPoster from "../posters/Bhola.jpg";
-import chandrachoodaPoster from "../posters/Chandrachooda Shiva Shankara Parvati.jpg";
-import durgaShaktiPoster from "../posters/Durga Shakti (Sarva Mangal Mangalye).jpg";
-import heyMarutiPoster from "../posters/Hey Maruti.jpg";
-import kalyugVsMahadevPoster from "../posters/Kalyug Vs Mahadev.png";
+import aigiriNandiniPoster from "../Posters/Aigiri Nandini X Aatma Rama.jpg";
+import aisoDeenDayalPoster from "../Posters/Aiso Deen Dayal (Dhan Dhan Bholenath).png";
+import anantShrutiPoster from "../Posters/Anant Shruti enhanced.jpg";
+import bholaPoster from "../Posters/Bhola.jpg";
+import chandrachoodaPoster from "../Posters/Chandrachooda Shiva Shankara Parvati.jpg";
+import durgaShaktiPoster from "../Posters/Durga Shakti (Sarva Mangal Mangalye).jpg";
+import heyMarutiPoster from "../Posters/Hey Maruti.jpg";
+import kalyugVsMahadevPoster from "../Posters/Kalyug Vs Mahadev.png";
 
 const ChevronLeft = ({ className = "", size = 28 }) => (
   <svg
