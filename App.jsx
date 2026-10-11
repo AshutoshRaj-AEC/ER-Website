@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
 import SubmitPage from "./components/SubmitPage";
 import AdminPage from "./components/AdminPage";
+import DashboardPage from "./components/DashboardPage";
 import { getUserProfile, supabase } from "./lib/supabase";
 
 // Sign-in used to live only in localStorage; clear what that version saved.
@@ -72,6 +73,10 @@ function App() {
   if (route === "/submit") {
     page = (
       <SubmitPage session={session} authReady={authReady} onOpenAuth={openAuth} />
+    );
+  } else if (route === "/dashboard") {
+    page = (
+      <DashboardPage session={session} authReady={authReady} onOpenAuth={openAuth} />
     );
   } else if (route === "/admin") {
     page = (

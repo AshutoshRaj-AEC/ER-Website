@@ -100,6 +100,9 @@ const AccountMenu = ({ user, isAdmin, onLogout }) => {
           <p className="truncate px-4 pb-2 pt-3 text-xs text-stone-400">
             {user.email}
           </p>
+          <a role="menuitem" href="/dashboard" className={menuItemClass}>
+            Artist dashboard
+          </a>
           <a role="menuitem" href="/submit" className={menuItemClass}>
             Submit music
           </a>

@@ -390,6 +390,12 @@ const SubmitPage = ({ session, authReady, onOpenAuth }) => {
                 The label has been notified. You can follow its status under
                 Your submissions.
               </p>
+              <a
+                href="/dashboard"
+                className="mt-4 inline-flex rounded-full border border-emerald-200/40 px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-emerald-100 transition hover:border-emerald-100"
+              >
+                Plan this release's budget
+              </a>
             </Panel>
           ) : null}
 
