@@ -1,8 +1,10 @@
+import { useEffect, useRef, useState } from "react";
+
 const navLinks = [
-  { label: "Artists", href: "#artists" },
-  { label: "Releases", href: "#releases" },
-  { label: "About", href: "#about" },
-  { label: "Contact", href: "#contact" },
+  { label: "Artists", href: "/#artists" },
+  { label: "Releases", href: "/#releases" },
+  { label: "About", href: "/#about" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 const GoogleIcon = () => {
@@ -28,11 +30,106 @@ const GoogleIcon = () => {
   );
 };
 
-const Header = ({ user, onOpenAuth, onLogout }) => {
+const Avatar = ({ user }) => {
+  return user.avatar ? (
+    <img
+      src={user.avatar}
+      alt=""
+      referrerPolicy="no-referrer"
+      className="h-8 w-8 rounded-full object-cover"
+    />
+  ) : (
+    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-xs font-bold uppercase text-white">
+      {user.name?.slice(0, 1) ?? "E"}
+    </span>
+  );
+};
+
+const AccountMenu = ({ user, isAdmin, onLogout }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (!menuRef.current?.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  const menuItemClass =
+    "block w-full rounded-xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-stone-200 transition hover:bg-white/10 hover:text-orange-200";
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        aria-label="Account menu"
+        onClick={() => setMenuOpen((current) => !current)}
+        className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 p-1 text-sm text-stone-200 transition hover:border-orange-300 sm:py-1 sm:pl-1 sm:pr-4"
+      >
+        <Avatar user={user} />
+        <span className="hidden max-w-32 truncate sm:inline">{user.name}</span>
+      </button>
+
+      {menuOpen ? (
+        <div
+          role="menu"
+          className="absolute right-0 mt-3 w-64 rounded-2xl border border-white/10 bg-stone-950 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+        >
+          <p className="truncate px-4 pb-2 pt-3 text-xs text-stone-400">
+            {user.email}
+          </p>
+          <a role="menuitem" href="/submit" className={menuItemClass}>
+            Submit music
+          </a>
+          {isAdmin ? (
+            <a role="menuitem" href="/admin" className={menuItemClass}>
+              Review submissions
+            </a>
+          ) : null}
+          <button
+            role="menuitem"
+            type="button"
+            onClick={() => {
+              setMenuOpen(false);
+              onLogout();
+            }}
+            className={menuItemClass}
+          >
+            Log out
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const Header = ({ user, isAdmin, onOpenAuth, onLogout }) => {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/65 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 sm:px-10">
-        <a href="#top" className="flex items-center gap-3">
+        <a href="/#top" className="flex items-center gap-3">
           <span className="h-3 w-3 rounded-full bg-orange-400 shadow-[0_0_20px_rgba(251,146,60,0.8)]" />
           <div>
             <p className="font-['Space_Grotesk'] text-lg font-bold uppercase tracking-[0.35em] text-white">
@@ -58,31 +155,7 @@ const Header = ({ user, onOpenAuth, onLogout }) => {
           </nav>
 
           {user ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 p-1 text-sm text-stone-200 sm:px-4 sm:py-2">
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-xs font-bold uppercase text-white">
-                    {user.name?.slice(0, 1) ?? "E"}
-                  </span>
-                )}
-                <span className="hidden max-w-32 truncate sm:inline">
-                  {user.name}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={onLogout}
-                className="rounded-full border border-white/15 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-200 transition hover:border-orange-300 hover:text-orange-200 sm:px-4"
-              >
-                Log out
-              </button>
-            </div>
+            <AccountMenu user={user} isAdmin={isAdmin} onLogout={onLogout} />
           ) : (
             <button
               type="button"
@@ -90,7 +163,7 @@ const Header = ({ user, onOpenAuth, onLogout }) => {
               className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-stone-900 transition hover:scale-[1.02] hover:bg-orange-50 sm:gap-3 sm:px-5 sm:py-3"
             >
               <GoogleIcon />
-              Sign up<span className="hidden sm:inline"> with Google</span>
+              Sign in<span className="hidden sm:inline"> with Google</span>
             </button>
           )}
         </div>

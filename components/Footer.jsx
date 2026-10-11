@@ -1,8 +1,8 @@
 const footerLinks = [
-  { label: "Artists", href: "#artists" },
-  { label: "Releases", href: "#releases" },
-  { label: "About", href: "#about" },
-  { label: "Contact", href: "#contact" },
+  { label: "Artists", href: "/#artists" },
+  { label: "Releases", href: "/#releases" },
+  { label: "About", href: "/#about" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 const socialLinks = [

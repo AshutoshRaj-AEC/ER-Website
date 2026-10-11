@@ -7,55 +7,107 @@ import AboutSection from "./components/AboutSection";
 import ContactSection from "./components/ContactSection";
 import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
+import SubmitPage from "./components/SubmitPage";
+import AdminPage from "./components/AdminPage";
+import { getUserProfile, supabase } from "./lib/supabase";
 
-const STORAGE_KEY = "eklauta-auth-user";
+// Sign-in used to live only in localStorage; clear what that version saved.
+window.localStorage.removeItem("eklauta-auth-user");
+
+const getRoute = () => window.location.pathname.replace(/\/+$/, "") || "/";
 
 function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const storedUser = window.localStorage.getItem(STORAGE_KEY);
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthReady(true);
+    });
 
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
-      }
-    }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleAuthenticated = (nextUser) => {
-    setUser(nextUser);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
-    setAuthModalOpen(false);
-  };
+  const userId = session?.user?.id;
+
+  useEffect(() => {
+    if (!userId) {
+      setIsAdmin(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    // null while checking, so the admin page doesn't flash "not allowed".
+    setIsAdmin(null);
+    supabase.rpc("is_admin").then(({ data }) => {
+      if (!cancelled) {
+        setIsAdmin(data === true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const handleLogout = () => {
-    setUser(null);
-    window.localStorage.removeItem(STORAGE_KEY);
+    supabase.auth.signOut();
   };
 
-  return (
-    <div className="bg-stone-950 text-stone-100">
-      <Header
-        user={user}
-        onOpenAuth={() => setAuthModalOpen(true)}
-        onLogout={handleLogout}
+  const openAuth = () => setAuthModalOpen(true);
+  const route = getRoute();
+
+  let page;
+
+  if (route === "/submit") {
+    page = (
+      <SubmitPage session={session} authReady={authReady} onOpenAuth={openAuth} />
+    );
+  } else if (route === "/admin") {
+    page = (
+      <AdminPage
+        session={session}
+        authReady={authReady}
+        isAdmin={isAdmin}
+        onOpenAuth={openAuth}
       />
-      <main>
+    );
+  } else {
+    page = (
+      <>
         <HeroSection />
         <ArtistsSection />
         <ReleasesSection />
         <AboutSection />
         <ContactSection />
-      </main>
+      </>
+    );
+  }
+
+  return (
+    <div className="bg-stone-950 text-stone-100">
+      <Header
+        user={getUserProfile(session?.user)}
+        isAdmin={isAdmin}
+        onOpenAuth={openAuth}
+        onLogout={handleLogout}
+      />
+      <main>{page}</main>
       <Footer />
       <AuthModal
         open={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        onAuthenticated={handleAuthenticated}
+        onSignedIn={() => setAuthModalOpen(false)}
       />
     </div>
   );

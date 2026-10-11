@@ -17,16 +17,16 @@ const ContactSection = () => {
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
-              href="mailto:eklautarecords@gmail.com"
+              href="/submit"
               className="rounded-full bg-orange-500 px-8 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-orange-400"
             >
-              eklautarecords@gmail.com
+              Submit your music
             </a>
             <a
-              href="#top"
+              href="mailto:eklautarecords@gmail.com"
               className="rounded-full border border-white/20 bg-white/5 px-8 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-orange-300 hover:text-orange-200"
             >
-              Back To Top
+              eklautarecords@gmail.com
             </a>
           </div>
         </div>
