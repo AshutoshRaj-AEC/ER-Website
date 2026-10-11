@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AutoSaveInput, fieldClass } from "./AutoSaveField";
 import { LoadingText, Panel } from "./PageShell";
 import StatusBadge from "./StatusBadge";
 import { supabase } from "../lib/supabase";
@@ -20,8 +21,7 @@ import {
 
 const PLAN_SELECT = "*, submission:submissions(id, status, track_title)";
 
-const inputClass =
-  "w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-stone-100 placeholder:text-stone-500 focus:border-orange-300 focus:outline-none disabled:opacity-60";
+const inputClass = fieldClass;
 
 const labelClass =
   "text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-400";
@@ -34,29 +34,6 @@ const SectionHeading = ({ children, aside }) => {
       </h2>
       {aside}
     </div>
-  );
-};
-
-// Keeps a local draft and saves when the field loses focus.
-const AutoSaveInput = ({ value, onSave, ...props }) => {
-  const [draft, setDraft] = useState(String(value ?? ""));
-
-  useEffect(() => {
-    setDraft(String(value ?? ""));
-  }, [value]);
-
-  return (
-    <input
-      {...props}
-      value={draft}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={(event) => {
-        if (event.target.checkValidity() && draft !== String(value ?? "")) {
-          onSave(draft);
-        }
-      }}
-      className={`${inputClass} ${props.className ?? ""}`}
-    />
   );
 };
 

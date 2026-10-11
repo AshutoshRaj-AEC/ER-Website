@@ -86,10 +86,12 @@ const AccountMenu = ({ user, isAdmin, onLogout }) => {
         aria-expanded={menuOpen}
         aria-label="Account menu"
         onClick={() => setMenuOpen((current) => !current)}
-        className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 p-1 text-sm text-stone-200 transition hover:border-orange-300 sm:py-1 sm:pl-1 sm:pr-4"
+        className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 p-1 text-sm text-stone-200 transition hover:border-orange-300 sm:py-1 sm:pl-1 sm:pr-4 md:p-1 lg:py-1 lg:pl-1 lg:pr-4"
       >
         <Avatar user={user} />
-        <span className="hidden max-w-32 truncate sm:inline">{user.name}</span>
+        <span className="hidden max-w-32 truncate sm:inline md:hidden lg:inline">
+          {user.name}
+        </span>
       </button>
 
       {menuOpen ? (
@@ -163,10 +165,11 @@ const Header = ({ user, isAdmin, onOpenAuth, onLogout }) => {
             <button
               type="button"
               onClick={onOpenAuth}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-stone-900 transition hover:scale-[1.02] hover:bg-orange-50 sm:gap-3 sm:px-5 sm:py-3"
+              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/15 bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-stone-900 transition hover:scale-[1.02] hover:bg-orange-50 sm:gap-3 sm:px-5 sm:py-3"
             >
               <GoogleIcon />
-              Sign in<span className="hidden sm:inline"> with Google</span>
+              Sign in
+              <span className="hidden sm:inline md:hidden lg:inline">&nbsp;with Google</span>
             </button>
           )}
         </div>

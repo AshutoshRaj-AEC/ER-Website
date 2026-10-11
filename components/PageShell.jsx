@@ -44,6 +44,29 @@ export const SignInPrompt = ({ message, onOpenAuth }) => {
   );
 };
 
+export const Tabs = ({ tabs, value, onChange }) => {
+  return (
+    <div className="mb-10 flex gap-1 overflow-x-auto border-b border-white/10 sm:gap-2" role="tablist">
+      {tabs.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="tab"
+          aria-selected={value === option.value}
+          onClick={() => onChange(option.value)}
+          className={`whitespace-nowrap border-b-2 px-2.5 py-3 text-[11px] font-semibold uppercase tracking-[0.1em] transition sm:px-4 sm:text-xs sm:tracking-[0.25em] ${
+            value === option.value
+              ? "border-orange-400 text-white"
+              : "border-transparent text-stone-400 hover:text-orange-200"
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 export const LoadingText = ({ children = "Loading…" }) => {
   return <p className="text-stone-400">{children}</p>;
 };
