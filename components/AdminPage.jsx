@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { LoadingText, PageShell, Panel, SignInPrompt } from "./PageShell";
 import StatusBadge from "./StatusBadge";
+import PlanDetail from "./PlanDetail";
+import PlanList from "./PlanList";
 import { STATUS_LABELS, SUBMISSIONS_BUCKET, supabase } from "../lib/supabase";
+import { PLAN_LIST_SELECT } from "../lib/releasePlans";
 
 const FILTERS = ["pending", "approved", "sent_to_distributor", "rejected", "all"];
 
@@ -245,7 +248,74 @@ const SubmissionCard = ({ submission, signedUrls, onUpdate }) => {
   );
 };
 
+const ArtistPlansTab = () => {
+  const [plans, setPlans] = useState(null);
+  const [openPlanId, setOpenPlanId] = useState(null);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    if (openPlanId) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    supabase
+      .from("release_plans")
+      .select(PLAN_LIST_SELECT)
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) {
+          return;
+        }
+        if (error) {
+          setLoadError("Couldn't load artist plans. Refresh to try again.");
+          setPlans([]);
+          return;
+        }
+        setPlans(data);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openPlanId]);
+
+  if (openPlanId) {
+    return (
+      <PlanDetail
+        planId={openPlanId}
+        readOnly
+        onBack={() => {
+          setOpenPlanId(null);
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {loadError ? <p className="text-red-300">{loadError}</p> : null}
+      {plans === null ? (
+        <LoadingText />
+      ) : plans.length === 0 ? (
+        <p className="text-stone-400">No artist has made a release plan yet.</p>
+      ) : (
+        <PlanList
+          plans={plans}
+          onOpen={(planId) => {
+            setOpenPlanId(planId);
+            window.scrollTo({ top: 0 });
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
+  const [tab, setTab] = useState("submissions");
   const [submissions, setSubmissions] = useState(null);
   const [signedUrls, setSignedUrls] = useState({});
   const [filter, setFilter] = useState("pending");
@@ -376,12 +446,8 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
     (submission) => filter === "all" || submission.status === filter
   );
 
-  return (
-    <PageShell
-      eyebrow="Admin"
-      title={title}
-      intro="Listen, check the details, then download the audio and poster for your distributor. Artists see the status you set here."
-    >
+  const submissionsTab = (
+    <>
       <div className="flex flex-wrap gap-3">
         {FILTERS.map((value) => (
           <button
@@ -417,6 +483,44 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
           ))
         )}
       </div>
+    </>
+  );
+
+  const tabs = [
+    { value: "submissions", label: "Submissions" },
+    { value: "plans", label: "Artist plans" },
+  ];
+
+  return (
+    <PageShell
+      eyebrow="Admin"
+      title={title}
+      intro={
+        tab === "plans"
+          ? "See how each artist is planning their releases and budgets. Plans are read-only here; only the artist can change them."
+          : "Listen, check the details, then download the audio and poster for your distributor. Artists see the status you set here."
+      }
+    >
+      <div className="mb-10 flex gap-2 border-b border-white/10" role="tablist">
+        {tabs.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            role="tab"
+            aria-selected={tab === option.value}
+            onClick={() => setTab(option.value)}
+            className={`-mb-px border-b-2 px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition ${
+              tab === option.value
+                ? "border-orange-400 text-white"
+                : "border-transparent text-stone-400 hover:text-orange-200"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "plans" ? <ArtistPlansTab /> : submissionsTab}
     </PageShell>
   );
 };
