@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { LoadingText, PageShell, Panel, SignInPrompt } from "./PageShell";
+import GrowthTracker from "./GrowthTracker";
+import { LoadingText, PageShell, Panel, SignInPrompt, Tabs } from "./PageShell";
 import StatusBadge from "./StatusBadge";
 import PlanDetail from "./PlanDetail";
 import PlanList from "./PlanList";
 import { STATUS_LABELS, SUBMISSIONS_BUCKET, supabase } from "../lib/supabase";
 import { PLAN_LIST_SELECT } from "../lib/releasePlans";
+import {
+  GROWTH_METRICS,
+  formatMetricValue,
+  formatMonth,
+  seriesFor,
+} from "../lib/growth";
 
 const FILTERS = ["pending", "approved", "sent_to_distributor", "rejected", "all"];
 
@@ -314,6 +321,117 @@ const ArtistPlansTab = () => {
   );
 };
 
+const ArtistGrowthTab = () => {
+  const [profiles, setProfiles] = useState(null);
+  const [openUserId, setOpenUserId] = useState(null);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    if (openUserId) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    supabase
+      .from("growth_profiles")
+      .select("user_id, artist_name, currency, growth_entries(*)")
+      .order("artist_name")
+      .then(({ data, error }) => {
+        if (cancelled) {
+          return;
+        }
+        if (error) {
+          setLoadError("Couldn't load artist growth. Refresh to try again.");
+          setProfiles([]);
+          return;
+        }
+        setProfiles(data);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openUserId]);
+
+  if (openUserId) {
+    const profile = profiles?.find((item) => item.user_id === openUserId);
+
+    return (
+      <div className="space-y-6">
+        <button
+          type="button"
+          onClick={() => {
+            setOpenUserId(null);
+            window.scrollTo({ top: 0 });
+          }}
+          className="text-xs font-semibold uppercase tracking-[0.25em] text-orange-300 transition hover:text-orange-200"
+        >
+          ← All artists
+        </button>
+        {profile ? (
+          <h2 className="font-['Space_Grotesk'] text-3xl font-bold uppercase tracking-[0.06em] text-white">
+            {profile.artist_name}
+          </h2>
+        ) : null}
+        <GrowthTracker userId={openUserId} readOnly />
+      </div>
+    );
+  }
+
+  const listeners = GROWTH_METRICS[0];
+
+  return (
+    <div className="space-y-6">
+      {loadError ? <p className="text-red-300">{loadError}</p> : null}
+      {profiles === null ? (
+        <LoadingText />
+      ) : profiles.length === 0 ? (
+        <p className="text-stone-400">No artist has started tracking their growth yet.</p>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {profiles.map((profile) => {
+            const series = seriesFor(profile.growth_entries, listeners.key);
+            const latest = series[series.length - 1];
+            const lastLogged = [...profile.growth_entries].sort((a, b) =>
+              b.month.localeCompare(a.month)
+            )[0];
+
+            return (
+              <button
+                key={profile.user_id}
+                type="button"
+                onClick={() => {
+                  setOpenUserId(profile.user_id);
+                  window.scrollTo({ top: 0 });
+                }}
+                className="rounded-[2rem] border border-white/10 bg-white/5 p-6 text-left transition hover:border-orange-300/60 sm:p-8"
+              >
+                <p className="font-['Space_Grotesk'] text-xl font-bold uppercase tracking-[0.06em] text-white">
+                  {profile.artist_name}
+                </p>
+                <p className="mt-1 text-sm text-stone-400">
+                  {lastLogged
+                    ? `Last logged ${formatMonth(lastLogged.month)} · ${profile.growth_entries.length} month${profile.growth_entries.length === 1 ? "" : "s"}`
+                    : "Nothing logged yet"}
+                </p>
+                {latest ? (
+                  <p className="mt-6 text-sm text-stone-300">
+                    <span className="text-2xl font-bold text-white">
+                      {formatMetricValue(listeners, latest.value, profile.currency)}
+                    </span>{" "}
+                    {listeners.label.toLowerCase()}
+                  </p>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
   const [tab, setTab] = useState("submissions");
   const [submissions, setSubmissions] = useState(null);
@@ -489,6 +607,7 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
   const tabs = [
     { value: "submissions", label: "Submissions" },
     { value: "plans", label: "Artist plans" },
+    { value: "growth", label: "Artist growth" },
   ];
 
   return (
@@ -498,29 +617,20 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
       intro={
         tab === "plans"
           ? "See how each artist is planning their releases and budgets. Plans are read-only here; only the artist can change them."
-          : "Listen, check the details, then download the audio and poster for your distributor. Artists see the status you set here."
+          : tab === "growth"
+            ? "See how each artist's audience and earnings are growing. Read-only; only the artist can log numbers."
+            : "Listen, check the details, then download the audio and poster for your distributor. Artists see the status you set here."
       }
     >
-      <div className="mb-10 flex gap-2 border-b border-white/10" role="tablist">
-        {tabs.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            role="tab"
-            aria-selected={tab === option.value}
-            onClick={() => setTab(option.value)}
-            className={`-mb-px border-b-2 px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition ${
-              tab === option.value
-                ? "border-orange-400 text-white"
-                : "border-transparent text-stone-400 hover:text-orange-200"
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <Tabs tabs={tabs} value={tab} onChange={setTab} />
 
-      {tab === "plans" ? <ArtistPlansTab /> : submissionsTab}
+      {tab === "plans" ? (
+        <ArtistPlansTab />
+      ) : tab === "growth" ? (
+        <ArtistGrowthTab />
+      ) : (
+        submissionsTab
+      )}
     </PageShell>
   );
 };

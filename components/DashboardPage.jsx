@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { LoadingText, PageShell, Panel, SignInPrompt } from "./PageShell";
+import GrowthTracker from "./GrowthTracker";
+import SongVault from "./SongVault";
+import { LoadingText, PageShell, Panel, SignInPrompt, Tabs } from "./PageShell";
 import PlanDetail from "./PlanDetail";
 import PlanList from "./PlanList";
 import { getUserProfile, supabase } from "../lib/supabase";
@@ -7,6 +9,17 @@ import { PLAN_LIST_SELECT } from "../lib/releasePlans";
 
 const getPlanIdFromUrl = () =>
   new URLSearchParams(window.location.search).get("plan");
+
+const getTabFromUrl = () => {
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return tab === "growth" || tab === "vault" ? tab : "plans";
+};
+
+const TABS = [
+  { value: "plans", label: "Release plans" },
+  { value: "growth", label: "Growth" },
+  { value: "vault", label: "Song vault" },
+];
 
 const inputClass =
   "mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-stone-100 placeholder:text-stone-500 focus:border-orange-300 focus:outline-none";
@@ -100,6 +113,7 @@ const NewPlanForm = ({ defaultArtistName, onCreate, onCancel }) => {
 
 const DashboardPage = ({ session, authReady, onOpenAuth }) => {
   const user = session?.user;
+  const [tab, setTab] = useState(getTabFromUrl);
   const [selectedPlanId, setSelectedPlanId] = useState(getPlanIdFromUrl);
   const [plans, setPlans] = useState(null);
   const [unplannedSubmissions, setUnplannedSubmissions] = useState([]);
@@ -110,14 +124,17 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
   useEffect(() => {
     document.title = "Artist Dashboard | EklautA Records";
 
-    const handlePopState = () => setSelectedPlanId(getPlanIdFromUrl());
+    const handlePopState = () => {
+      setTab(getTabFromUrl());
+      setSelectedPlanId(getPlanIdFromUrl());
+    };
     window.addEventListener("popstate", handlePopState);
 
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   useEffect(() => {
-    if (!user?.id || selectedPlanId) {
+    if (!user?.id || selectedPlanId || tab !== "plans") {
       return undefined;
     }
 
@@ -158,7 +175,13 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, selectedPlanId, reloadKey]);
+  }, [user?.id, selectedPlanId, tab, reloadKey]);
+
+  const selectTab = (nextTab) => {
+    window.history.pushState({}, "", nextTab === "plans" ? "/dashboard" : `/dashboard?tab=${nextTab}`);
+    setTab(nextTab);
+    setSelectedPlanId(null);
+  };
 
   const openPlan = (planId) => {
     window.history.pushState({}, "", `/dashboard?plan=${planId}`);
@@ -207,8 +230,9 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
     <PageShell
       eyebrow="Artist dashboard"
       title="Run your release like a label"
-      intro="Plan the budget for each release, see how many streams it takes to earn it back, and work through the release checklist."
+      intro="Plan the budget for each release, see how many streams it takes to earn it back, and track how your audience grows, and keep every song idea safe in your vault."
     >
+      {user ? <Tabs tabs={TABS} value={tab} onChange={selectTab} /> : null}
       {children}
     </PageShell>
   );
@@ -223,6 +247,16 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
         message="Sign in with Google to plan your releases and budgets."
         onOpenAuth={onOpenAuth}
       />
+    );
+  }
+
+  if (tab === "vault") {
+    return shell(<SongVault userId={user.id} />);
+  }
+
+  if (tab === "growth") {
+    return shell(
+      <GrowthTracker userId={user.id} defaultArtistName={getUserProfile(user)?.name ?? ""} />
     );
   }
 
