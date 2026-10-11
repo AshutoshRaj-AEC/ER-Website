@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const SHOW_PREVIEW_LOGIN = import.meta.env.DEV;
 
 // The Google script and initialize() call are shared across every open of
 // the modal, so they live at module level and only ever run once.
 let googleScriptPromise = null;
 let googleInitialized = false;
 let handleGoogleCredential = null;
+
+// Google embeds the hashed nonce in its ID token and Supabase checks it
+// against the raw one, so a captured token can't be replayed elsewhere.
+const rawNonce = crypto.randomUUID();
+const hashedNoncePromise = crypto.subtle
+  .digest("SHA-256", new TextEncoder().encode(rawNonce))
+  .then((buffer) =>
+    Array.from(new Uint8Array(buffer), (byte) =>
+      byte.toString(16).padStart(2, "0")
+    ).join("")
+  );
 
 const loadGoogleScript = () => {
   if (!googleScriptPromise) {
@@ -28,31 +39,17 @@ const loadGoogleScript = () => {
   return googleScriptPromise;
 };
 
-const decodeJwtPayload = (token) => {
-  const payload = token.split(".")[1];
-
-  if (!payload) {
-    throw new Error("Invalid Google credential payload.");
-  }
-
-  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-  const decoded = window.atob(normalized);
-  const bytes = Uint8Array.from(decoded, (char) => char.charCodeAt(0));
-  const text = new TextDecoder().decode(bytes);
-
-  return JSON.parse(text);
-};
-
-const AuthModal = ({ open, onClose, onAuthenticated }) => {
+const AuthModal = ({ open, onClose, onSignedIn }) => {
   const googleButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const onAuthenticatedRef = useRef(onAuthenticated);
+  const onSignedInRef = useRef(onSignedIn);
   const onCloseRef = useRef(onClose);
   const [googleReady, setGoogleReady] = useState(false);
-  const [googleError, setGoogleError] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    onAuthenticatedRef.current = onAuthenticated;
+    onSignedInRef.current = onSignedIn;
     onCloseRef.current = onClose;
   });
 
@@ -63,23 +60,29 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
 
     let cancelled = false;
 
-    handleGoogleCredential = (credential) => {
-      try {
-        const profile = decodeJwtPayload(credential);
+    handleGoogleCredential = async (credential) => {
+      setSigningIn(true);
+      setError("");
 
-        onAuthenticatedRef.current({
-          provider: "google",
-          name: profile.name,
-          email: profile.email,
-          avatar: profile.picture,
-        });
-      } catch {
-        setGoogleError(true);
+      const { error: signInError } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: credential,
+        nonce: rawNonce,
+      });
+
+      setSigningIn(false);
+
+      if (signInError) {
+        console.error(signInError);
+        setError("Sign-in failed. Please try again.");
+        return;
       }
+
+      onSignedInRef.current();
     };
 
-    loadGoogleScript()
-      .then(() => {
+    Promise.all([loadGoogleScript(), hashedNoncePromise])
+      .then(([, hashedNonce]) => {
         if (cancelled || !googleButtonRef.current) {
           return;
         }
@@ -87,6 +90,7 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
         if (!googleInitialized) {
           window.google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
+            nonce: hashedNonce,
             callback: ({ credential }) => handleGoogleCredential?.(credential),
           });
           googleInitialized = true;
@@ -97,7 +101,7 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
           theme: "outline",
           size: "large",
           shape: "pill",
-          text: "signup_with",
+          text: "continue_with",
           width: Math.min(260, googleButtonRef.current.offsetWidth),
         });
 
@@ -105,7 +109,9 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
       })
       .catch(() => {
         if (!cancelled) {
-          setGoogleError(true);
+          setError(
+            "Google sign-in couldn't load. Check your connection and try again."
+          );
         }
       });
 
@@ -113,7 +119,8 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
       cancelled = true;
       handleGoogleCredential = null;
       setGoogleReady(false);
-      setGoogleError(false);
+      setSigningIn(false);
+      setError("");
     };
   }, [open]);
 
@@ -138,15 +145,6 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
   if (!open) {
     return null;
   }
-
-  const handlePreviewLogin = () => {
-    onAuthenticated({
-      provider: "preview",
-      name: "Developer Preview",
-      email: "preview@eklautarecords.local",
-      avatar: "",
-    });
-  };
 
   const handleBackdropClick = (event) => {
     if (event.target === event.currentTarget) {
@@ -188,8 +186,8 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
         </div>
 
         <p className="mt-6 leading-7 text-stone-300">
-          Sign in with Google to see your name and photo on the site. Your
-          details are only saved in this browser.
+          Sign in with Google to submit your music to EklautA Records and follow
+          its review.
         </p>
 
         <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
@@ -200,42 +198,21 @@ const AuthModal = ({ open, onClose, onAuthenticated }) => {
             <div className="mt-5 min-h-[44px]" ref={googleButtonRef} />
           ) : (
             <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-black/30 px-5 py-4 text-sm leading-7 text-stone-400">
-              {SHOW_PREVIEW_LOGIN
-                ? "Add `VITE_GOOGLE_CLIENT_ID` to your environment to enable live Google SSO. The developer preview login below still works for testing."
+              {import.meta.env.DEV
+                ? "Add `VITE_GOOGLE_CLIENT_ID` to your environment to enable Google sign-in."
                 : "Google sign-in is unavailable right now. Please try again later."}
             </div>
           )}
-          {GOOGLE_CLIENT_ID && googleError ? (
-            <p className="mt-4 text-sm text-red-300">
-              Google sign-in couldn't load. Check your connection and try
-              again.
-            </p>
+          {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
+          {signingIn ? (
+            <p className="mt-4 text-sm text-stone-400">Signing you in…</p>
           ) : null}
-          {GOOGLE_CLIENT_ID && !googleReady && !googleError ? (
+          {GOOGLE_CLIENT_ID && !googleReady && !error ? (
             <p className="mt-4 text-sm text-stone-400">
               Loading Google sign-in…
             </p>
           ) : null}
         </div>
-
-        {SHOW_PREVIEW_LOGIN ? (
-          <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-orange-300">
-              Developer preview
-            </p>
-            <p className="mt-3 text-sm leading-7 text-stone-400">
-              Only shown during local development. Use it to test the
-              signed-in experience without Google.
-            </p>
-            <button
-              type="button"
-              onClick={handlePreviewLogin}
-              className="mt-5 inline-flex rounded-full bg-orange-500 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-orange-400"
-            >
-              Continue as preview user
-            </button>
-          </div>
-        ) : null}
       </div>
     </div>
   );

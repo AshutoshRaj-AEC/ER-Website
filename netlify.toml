@@ -1,3 +1,15 @@
 [build]
   command = "npm run build"
   publish = "dist"
+
+# Public client-side values (safe to commit). VITE_GOOGLE_CLIENT_ID is set in
+# the Netlify dashboard.
+[build.environment]
+  VITE_SUPABASE_URL = "https://ztzuefhbdqanfutcpjzz.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_i7b3Hfm4i7nK3TWy8pvAhQ_x_xQb7EX"
+
+# Serve the app for /submit, /admin and any other client-side route.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
