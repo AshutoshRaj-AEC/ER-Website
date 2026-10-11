@@ -36,7 +36,7 @@ const AboutSection = () => {
               key={stat.label}
               className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center sm:p-10"
             >
-              <p className="mb-3 font-['Space_Grotesk'] text-4xl font-bold uppercase tracking-[0.06em] text-orange-300 md:text-5xl">
+              <p className="mb-3 font-['Space_Grotesk'] text-4xl font-bold uppercase tracking-[0.06em] text-orange-300 lg:text-5xl">
                 {stat.value}
               </p>
               <p className="text-[11px] uppercase tracking-[0.28em] text-stone-400">
