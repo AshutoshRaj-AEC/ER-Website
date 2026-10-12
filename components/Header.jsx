@@ -105,6 +105,9 @@ const AccountMenu = ({ user, isAdmin, onLogout }) => {
           <a role="menuitem" href="/dashboard" className={menuItemClass}>
             Artist dashboard
           </a>
+          <a role="menuitem" href="/dashboard?tab=insights" className={menuItemClass}>
+            Spotify Insights
+          </a>
           <a role="menuitem" href="/submit" className={menuItemClass}>
             Submit music
           </a>
