@@ -6,6 +6,7 @@ import PlanDetail from "./PlanDetail";
 import PlanList from "./PlanList";
 import { STATUS_LABELS, SUBMISSIONS_BUCKET, supabase } from "../lib/supabase";
 import { PLAN_LIST_SELECT } from "../lib/releasePlans";
+import { formatShortDate, formatSize } from "../lib/songVault";
 import {
   GROWTH_METRICS,
   formatMetricValue,
@@ -23,6 +24,55 @@ const STATUS_ACTIONS = [
 ];
 
 const SIGNED_URL_SECONDS = 60 * 60;
+
+// Supabase free plan file storage, shared by every bucket.
+const STORAGE_LIMIT_BYTES = 1024 * 1024 * 1024;
+
+const BUCKET_LABELS = {
+  submissions: "Release submissions",
+  "song-vault": "Artists' song vaults",
+};
+
+const StorageMeter = ({ usage }) => {
+  const used = usage.reduce((total, bucket) => total + Number(bucket.bytes), 0);
+  const percent = Math.min(100, (used / STORAGE_LIMIT_BYTES) * 100);
+  const level = percent >= 90 ? "critical" : percent >= 75 ? "warning" : "ok";
+
+  return (
+    <div className="mb-8 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+          File storage
+        </p>
+        <p className="text-sm text-stone-200">
+          <span className="font-semibold text-white">{formatSize(used)}</span> of 1 GB used (
+          {percent < 1 ? "<1" : Math.round(percent)}%)
+        </p>
+      </div>
+      <div
+        className="mt-3 h-2 overflow-hidden rounded-full bg-white/10"
+        role="img"
+        aria-label={`${Math.round(percent)}% of file storage used`}
+      >
+        <div
+          className={`h-full rounded-full ${level === "critical" ? "bg-red-400" : level === "warning" ? "bg-amber-300" : "bg-orange-400"}`}
+          style={{ width: `${Math.max(percent, 1)}%` }}
+        />
+      </div>
+      <p className="mt-3 text-xs text-stone-500">
+        {usage
+          .map((bucket) => `${BUCKET_LABELS[bucket.bucket_id] ?? bucket.bucket_id}: ${formatSize(Number(bucket.bytes))}`)
+          .join(" · ")}
+      </p>
+      {level !== "ok" ? (
+        <p className={`mt-2 text-sm ${level === "critical" ? "text-red-300" : "text-amber-200"}`}>
+          {level === "critical" ? "⚠ Storage is almost full." : "⚠ Storage is filling up."} Delete
+          the files of releases you've already sent to the distributor to free up space.
+        </p>
+      ) : null}
+    </div>
+  );
+};
 
 const getDownloadName = (submission, path, suffix) => {
   const base = `${submission.artist_name} - ${submission.track_title}`
@@ -72,7 +122,15 @@ const smallButtonClass =
 
 const EMAILED_STATUSES = ["approved", "sent_to_distributor", "rejected"];
 
-const SubmissionCard = ({ submission, adminNote, signedUrls, onUpdate, onSaveNote }) => {
+const SubmissionCard = ({
+  submission,
+  adminNote,
+  fileBytes,
+  signedUrls,
+  onUpdate,
+  onSaveNote,
+  onRemoveFiles,
+}) => {
   const [notes, setNotes] = useState(adminNote ?? "");
   const [artistMessage, setArtistMessage] = useState(submission.artist_message ?? "");
   const [saving, setSaving] = useState(false);
@@ -120,6 +178,24 @@ const SubmissionCard = ({ submission, adminNote, signedUrls, onUpdate, onSaveNot
     window.location.assign(data.signedUrl);
   };
 
+  const [removingFiles, setRemovingFiles] = useState(false);
+
+  const removeFiles = async () => {
+    const confirmed = window.confirm(
+      `Delete the audio and poster for "${submission.track_title}"${fileBytes ? ` (${formatSize(fileBytes)})` : ""}?\n\n` +
+        "Make sure you've kept your own copy. They can't be downloaded again. The submission details, status and messages are kept."
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setRemovingFiles(true);
+    setMessage("");
+    const error = await onRemoveFiles(submission, fileBytes);
+    setRemovingFiles(false);
+    setMessage(error ? "Couldn't delete the files. Please try again." : "Files deleted.");
+  };
+
   const copyDetails = async () => {
     try {
       await navigator.clipboard.writeText(formatDetailsForCopy(submission));
@@ -133,7 +209,11 @@ const SubmissionCard = ({ submission, adminNote, signedUrls, onUpdate, onSaveNot
     <Panel>
       <div className="flex flex-col gap-6 md:flex-row">
         <div className="shrink-0">
-          {posterUrl ? (
+          {submission.files_removed_at ? (
+            <div className="flex h-40 w-40 items-center justify-center rounded-2xl border border-dashed border-white/15 p-4 text-center text-xs text-stone-500">
+              Files removed to free up space
+            </div>
+          ) : posterUrl ? (
             <img
               src={posterUrl}
               alt={`Poster for ${submission.track_title}`}
@@ -192,7 +272,7 @@ const SubmissionCard = ({ submission, adminNote, signedUrls, onUpdate, onSaveNot
             </details>
           ) : null}
 
-          {audioUrl ? (
+          {audioUrl && !submission.files_removed_at ? (
             <audio
               controls
               preload="none"
@@ -202,24 +282,56 @@ const SubmissionCard = ({ submission, adminNote, signedUrls, onUpdate, onSaveNot
           ) : null}
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => download(submission.audio_path, "")}
-              className="rounded-full bg-orange-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:bg-orange-400"
-            >
-              Download audio
-            </button>
-            <button
-              type="button"
-              onClick={() => download(submission.poster_path, " (poster)")}
-              className="rounded-full bg-orange-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:bg-orange-400"
-            >
-              Download poster
-            </button>
+            {submission.files_removed_at ? null : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => download(submission.audio_path, "")}
+                  className="rounded-full bg-orange-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:bg-orange-400"
+                >
+                  Download audio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => download(submission.poster_path, " (poster)")}
+                  className="rounded-full bg-orange-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-white transition hover:bg-orange-400"
+                >
+                  Download poster
+                </button>
+              </>
+            )}
             <button type="button" onClick={copyDetails} className={smallButtonClass}>
               Copy details
             </button>
           </div>
+
+          {submission.files_removed_at ? (
+            <p className="mt-4 text-sm text-stone-400">
+              Audio and poster deleted on{" "}
+              {formatShortDate(submission.files_removed_at)}
+              {submission.files_removed_bytes
+                ? `, freeing ${formatSize(Number(submission.files_removed_bytes))}`
+                : ""}
+              . The details above are kept.
+            </p>
+          ) : submission.status === "sent_to_distributor" ? (
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-sm text-stone-300">
+                This release is with the distributor. Once you've kept your own copy, you can
+                delete the audio and poster here to free up storage.
+              </p>
+              <button
+                type="button"
+                disabled={removingFiles}
+                onClick={removeFiles}
+                className="mt-3 rounded-full border border-red-300/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-red-200 transition hover:border-red-300 hover:bg-red-400/10 disabled:cursor-wait disabled:opacity-50"
+              >
+                {removingFiles
+                  ? "Deleting…"
+                  : `Delete files to free up space${fileBytes ? ` (${formatSize(fileBytes)})` : ""}`}
+              </button>
+            </div>
+          ) : null}
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             <label className="block">
@@ -475,6 +587,8 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
   const [submissions, setSubmissions] = useState(null);
   const [adminNotes, setAdminNotes] = useState({});
   const [notice, setNotice] = useState("");
+  const [storageUsage, setStorageUsage] = useState(null);
+  const [fileSizes, setFileSizes] = useState({});
   const [signedUrls, setSignedUrls] = useState({});
   const [filter, setFilter] = useState("pending");
   const [loadError, setLoadError] = useState("");
@@ -482,6 +596,25 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
   useEffect(() => {
     document.title = "Review Submissions | EklautA Records";
   }, []);
+
+  // Storage totals and per-release file sizes, for the meter and delete buttons.
+  const loadStorage = async () => {
+    const [usageResult, sizesResult] = await Promise.all([
+      supabase.rpc("admin_storage_usage"),
+      supabase.rpc("admin_submission_file_sizes"),
+    ]);
+
+    if (!usageResult.error) {
+      setStorageUsage(usageResult.data);
+    }
+    if (!sizesResult.error) {
+      setFileSizes(
+        Object.fromEntries(
+          sizesResult.data.map((entry) => [entry.submission_id, Number(entry.bytes)])
+        )
+      );
+    }
+  };
 
   useEffect(() => {
     if (isAdmin !== true) {
@@ -510,6 +643,7 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
         Object.fromEntries(notesResult.data.map((entry) => [entry.submission_id, entry.notes]))
       );
       setSubmissions(data);
+      loadStorage();
 
       const paths = data.flatMap((submission) => [
         submission.poster_path,
@@ -568,6 +702,27 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
       );
     }
     return null;
+  };
+
+  const removeSubmissionFiles = async (submission, bytes) => {
+    const { data: removed, error: removeError } = await supabase.storage
+      .from(SUBMISSIONS_BUCKET)
+      .remove([submission.audio_path, submission.poster_path]);
+
+    // Storage reports no error when access rules refuse a delete; it just
+    // removes nothing, so check that the files actually went.
+    if (removeError || !removed?.length) {
+      console.error(removeError ?? "No files were deleted");
+      return removeError ?? new Error("No files were deleted");
+    }
+
+    const error = await updateSubmission(submission.id, {
+      files_removed_at: new Date().toISOString(),
+      files_removed_bytes: bytes ? Math.round(bytes) : null,
+    });
+
+    loadStorage();
+    return error;
   };
 
   // Private notes live in their own admin-only table; an empty note removes it.
@@ -643,6 +798,7 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
 
   const submissionsTab = (
     <>
+      {storageUsage ? <StorageMeter usage={storageUsage} /> : null}
       {notice ? (
         <p
           className="mb-6 rounded-2xl border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm text-emerald-100"
@@ -682,6 +838,8 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
               submission={submission}
               signedUrls={signedUrls}
               adminNote={adminNotes[submission.id]}
+              fileBytes={fileSizes[submission.id]}
+              onRemoveFiles={removeSubmissionFiles}
               onUpdate={updateSubmission}
               onSaveNote={saveAdminNote}
             />
