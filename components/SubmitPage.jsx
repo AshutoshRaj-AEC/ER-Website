@@ -176,6 +176,16 @@ const MySubmissions = ({ submissions }) => {
               <div className="mt-3">
                 <StatusBadge status={submission.status} />
               </div>
+              {submission.artist_message ? (
+                <div className="mt-3 border-l-2 border-orange-400 pl-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-200">
+                    From the label
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-stone-300">
+                    {submission.artist_message}
+                  </p>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -223,7 +233,7 @@ const SubmitPage = ({ session, authReady, onOpenAuth }) => {
 
     supabase
       .from("submissions")
-      .select("id, artist_name, track_title, status, created_at")
+      .select("id, artist_name, track_title, status, created_at, artist_message")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data, error: loadError }) => {

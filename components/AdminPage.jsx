@@ -70,24 +70,39 @@ const Detail = ({ label, value }) => {
 const smallButtonClass =
   "rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-stone-200 transition hover:border-orange-300 hover:text-orange-200 disabled:cursor-wait disabled:opacity-50";
 
-const SubmissionCard = ({ submission, signedUrls, onUpdate }) => {
-  const [notes, setNotes] = useState(submission.admin_notes ?? "");
+const EMAILED_STATUSES = ["approved", "sent_to_distributor", "rejected"];
+
+const SubmissionCard = ({ submission, adminNote, signedUrls, onUpdate, onSaveNote }) => {
+  const [notes, setNotes] = useState(adminNote ?? "");
+  const [artistMessage, setArtistMessage] = useState(submission.artist_message ?? "");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
   const posterUrl = signedUrls[submission.poster_path];
   const audioUrl = signedUrls[submission.audio_path];
-  const notesChanged = notes !== (submission.admin_notes ?? "");
+  const notesChanged = notes !== (adminNote ?? "");
+  const artistMessageChanged = artistMessage !== (submission.artist_message ?? "");
 
+  // The artist message is saved with the status so the email includes it.
   const save = async (changes) => {
     setSaving(true);
     setMessage("");
-    const error = await onUpdate(submission.id, {
-      ...changes,
-      admin_notes: notes.trim() ? notes.trim() : null,
-    });
+    const errors = await Promise.all([
+      changes.status || artistMessageChanged
+        ? onUpdate(submission.id, {
+            ...changes,
+            artist_message: artistMessage.trim() ? artistMessage.trim() : null,
+          })
+        : null,
+      notesChanged ? onSaveNote(submission.id, notes.trim()) : null,
+    ]);
     setSaving(false);
-    setMessage(error ? "Couldn't save. Please try again." : "Saved.");
+
+    if (errors.some(Boolean)) {
+      setMessage("Couldn't save. Please try again.");
+    } else {
+      setMessage("Saved.");
+    }
   };
 
   const download = async (path, suffix) => {
@@ -206,18 +221,41 @@ const SubmissionCard = ({ submission, signedUrls, onUpdate }) => {
             </button>
           </div>
 
-          <label className="mt-6 block">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-500">
-              Notes (only admins see these)
-            </span>
-            <textarea
-              rows={2}
-              maxLength={5000}
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-stone-100 focus:border-orange-300 focus:outline-none"
-            />
-          </label>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <label className="block">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-500">
+                Message to artist
+              </span>
+              <textarea
+                rows={3}
+                maxLength={2000}
+                placeholder="Included in the email when you change the status, and shown on their submissions page."
+                value={artistMessage}
+                onChange={(event) => setArtistMessage(event.target.value)}
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-stone-100 placeholder:text-stone-600 focus:border-orange-300 focus:outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-500">
+                Private notes (only admins see these)
+              </span>
+              <textarea
+                rows={3}
+                maxLength={5000}
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-stone-100 focus:border-orange-300 focus:outline-none"
+              />
+            </label>
+          </div>
+
+          <p className="mt-4 text-xs text-stone-500">
+            {submission.artist_notified_status
+              ? `Artist emailed about “${STATUS_LABELS[submission.artist_notified_status]}” · ${new Date(submission.artist_notified_at).toLocaleString()}. `
+              : ""}
+            Approving, rejecting or marking it sent emails the artist at{" "}
+            {submission.contact_email}.
+          </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {STATUS_ACTIONS.filter(
@@ -233,14 +271,14 @@ const SubmissionCard = ({ submission, signedUrls, onUpdate }) => {
                 {action.label}
               </button>
             ))}
-            {notesChanged ? (
+            {notesChanged || artistMessageChanged ? (
               <button
                 type="button"
                 disabled={saving}
                 onClick={() => save({})}
                 className={smallButtonClass}
               >
-                Save notes
+                Save without emailing
               </button>
             ) : null}
             {message ? (
@@ -435,6 +473,8 @@ const ArtistGrowthTab = () => {
 const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
   const [tab, setTab] = useState("submissions");
   const [submissions, setSubmissions] = useState(null);
+  const [adminNotes, setAdminNotes] = useState({});
+  const [notice, setNotice] = useState("");
   const [signedUrls, setSignedUrls] = useState({});
   const [filter, setFilter] = useState("pending");
   const [loadError, setLoadError] = useState("");
@@ -451,21 +491,24 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
     let cancelled = false;
 
     const load = async () => {
-      const { data, error } = await supabase
-        .from("submissions")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const [{ data, error }, notesResult] = await Promise.all([
+        supabase.from("submissions").select("*").order("created_at", { ascending: false }),
+        supabase.from("submission_admin_notes").select("submission_id, notes"),
+      ]);
 
       if (cancelled) {
         return;
       }
 
-      if (error) {
+      if (error || notesResult.error) {
         setLoadError("Couldn't load submissions. Refresh to try again.");
         setSubmissions([]);
         return;
       }
 
+      setAdminNotes(
+        Object.fromEntries(notesResult.data.map((entry) => [entry.submission_id, entry.notes]))
+      );
       setSubmissions(data);
 
       const paths = data.flatMap((submission) => [
@@ -515,6 +558,40 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
     setSubmissions((current) =>
       current.map((submission) => (submission.id === id ? data : submission))
     );
+
+    // The card may leave the current filter, so confirm at the top of the list.
+    if (changes.status) {
+      setNotice(
+        `“${data.track_title}” moved to ${STATUS_LABELS[data.status]}.${
+          EMAILED_STATUSES.includes(data.status) ? ` Emailing ${data.contact_email}.` : ""
+        }`
+      );
+    }
+    return null;
+  };
+
+  // Private notes live in their own admin-only table; an empty note removes it.
+  const saveAdminNote = async (submissionId, notes) => {
+    const { error } = notes
+      ? await supabase
+          .from("submission_admin_notes")
+          .upsert({ submission_id: submissionId, notes }, { onConflict: "submission_id" })
+      : await supabase.from("submission_admin_notes").delete().eq("submission_id", submissionId);
+
+    if (error) {
+      console.error(error);
+      return error;
+    }
+
+    setAdminNotes((current) => {
+      const next = { ...current };
+      if (notes) {
+        next[submissionId] = notes;
+      } else {
+        delete next[submissionId];
+      }
+      return next;
+    });
     return null;
   };
 
@@ -566,6 +643,14 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
 
   const submissionsTab = (
     <>
+      {notice ? (
+        <p
+          className="mb-6 rounded-2xl border border-emerald-300/30 bg-emerald-300/10 px-5 py-3 text-sm text-emerald-100"
+          aria-live="polite"
+        >
+          {notice}
+        </p>
+      ) : null}
       <div className="flex flex-wrap gap-3">
         {FILTERS.map((value) => (
           <button
@@ -596,7 +681,9 @@ const AdminPage = ({ session, authReady, isAdmin, onOpenAuth }) => {
               key={submission.id}
               submission={submission}
               signedUrls={signedUrls}
+              adminNote={adminNotes[submission.id]}
               onUpdate={updateSubmission}
+              onSaveNote={saveAdminNote}
             />
           ))
         )}
