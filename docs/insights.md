@@ -34,6 +34,8 @@ day. All-time periods are stored with `period_start = '-infinity'`.
   comma/semicolon/tab delimiters, UTF-8 (and UTF-16 with a BOM).
 - Limits: 5 MB per file (also enforced by the storage bucket), 50,000 data rows
   (also enforced by `insights_commit_import`).
+- Each artist can keep up to 50 MB of original CSVs (database-enforced upload
+  limit); deleting old uploads frees space.
 - Rows with the wrong number of values are skipped and reported by line.
 - Counts accept `12,345`, `12 345`, `1.234.567`. Empty, `-`, `n/a` mean
   **missing** (stored as NULL, shown as "—"), never zero. Negative, fractional
