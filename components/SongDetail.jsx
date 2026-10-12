@@ -3,6 +3,7 @@ import { AutoSaveInput, AutoSaveTextarea, fieldClass } from "./AutoSaveField";
 import { LoadingText, Panel } from "./PageShell";
 import VoiceRecorder from "./VoiceRecorder";
 import { supabase } from "../lib/supabase";
+import { bytesLeft, getUploadUsage, isStorageRefusal } from "../lib/uploadLimits";
 import {
   DEMO_TYPES,
   IDEA_KINDS,
@@ -349,7 +350,7 @@ const DemoUpload = ({ onUpload }) => {
   );
 };
 
-const AudioSection = ({ audio, signedUrls, onSaveRecording, onUploadDemo, onDelete }) => {
+const AudioSection = ({ audio, signedUrls, onSaveRecording, onUploadDemo, onDelete, uploadError }) => {
   return (
     <Panel>
       <SectionHeading>Voice notes & demos</SectionHeading>
@@ -357,6 +358,11 @@ const AudioSection = ({ audio, signedUrls, onSaveRecording, onUploadDemo, onDele
         <VoiceRecorder onSave={onSaveRecording} />
         <DemoUpload onUpload={onUploadDemo} />
       </div>
+      {uploadError ? (
+        <p className="mt-4 text-sm text-red-300" aria-live="polite">
+          {uploadError}
+        </p>
+      ) : null}
 
       {audio.length > 0 ? (
         <ul className="mt-8 space-y-3">
@@ -471,6 +477,7 @@ const SongDetail = ({ songId, userId, onBack, onDeleted }) => {
   const [lyricsDirty, setLyricsDirty] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [message, setMessage] = useState({ text: "", error: false });
+  const [audioUploadError, setAudioUploadError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -636,10 +643,22 @@ const SongDetail = ({ songId, userId, onBack, onDeleted }) => {
   const storeAudio = async ({ blob, contentType, extension, kind, label }) => {
     const path = `${userId}/${songId}/${crypto.randomUUID()}.${extension}`;
     const bucket = supabase.storage.from(SONG_VAULT_BUCKET);
+    setAudioUploadError("");
+
+    const left = bytesLeft(await getUploadUsage(), "song-vault");
+    if (left !== null && blob.size > left) {
+      setAudioUploadError("Your Song Vault is full (200 MB per artist). Delete old voice notes or demos to make space.");
+      return false;
+    }
 
     const { error: uploadError } = await bucket.upload(path, blob, { contentType });
     if (uploadError) {
-      report(uploadError);
+      console.error(uploadError);
+      setAudioUploadError(
+        isStorageRefusal(uploadError)
+          ? "Your Song Vault is full (200 MB per artist). Delete old voice notes or demos to make space."
+          : "Couldn't upload that. Please check your connection and try again."
+      );
       return false;
     }
 
@@ -863,6 +882,7 @@ const SongDetail = ({ songId, userId, onBack, onDeleted }) => {
         onSaveRecording={saveRecording}
         onUploadDemo={uploadDemo}
         onDelete={deleteAudio}
+        uploadError={audioUploadError}
       />
 
       <CreativeHistory events={buildHistory({ statusHistory, versions, ideas, audio })} />

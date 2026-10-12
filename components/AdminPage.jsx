@@ -67,7 +67,7 @@ const StorageMeter = ({ usage }) => {
       {level !== "ok" ? (
         <p className={`mt-2 text-sm ${level === "critical" ? "text-red-300" : "text-amber-200"}`}>
           {level === "critical" ? "⚠ Storage is almost full." : "⚠ Storage is filling up."} Delete
-          the files of releases you've already sent to the distributor to free up space.
+          the files of releases you've sent to the distributor or rejected to free up space.
         </p>
       ) : null}
     </div>
@@ -314,11 +314,12 @@ const SubmissionCard = ({
                 : ""}
               . The details above are kept.
             </p>
-          ) : submission.status === "sent_to_distributor" ? (
+          ) : ["sent_to_distributor", "rejected"].includes(submission.status) ? (
             <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4">
               <p className="text-sm text-stone-300">
-                This release is with the distributor. Once you've kept your own copy, you can
-                delete the audio and poster here to free up storage.
+                {submission.status === "rejected"
+                  ? "This release was rejected. You can delete its audio and poster to free up storage."
+                  : "This release is with the distributor. Once you've kept your own copy, you can delete the audio and poster here to free up storage."}
               </p>
               <button
                 type="button"

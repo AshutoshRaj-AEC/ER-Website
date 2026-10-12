@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { LoadingText, PageShell, Panel, SignInPrompt } from "./PageShell";
 import StatusBadge from "./StatusBadge";
 import { SUBMISSIONS_BUCKET, supabase } from "../lib/supabase";
+import { bytesLeft, formatMegabytes, getUploadUsage, isStorageRefusal } from "../lib/uploadLimits";
 
 const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
 const MAX_POSTER_BYTES = 10 * 1024 * 1024;
@@ -207,6 +208,7 @@ const SubmitPage = ({ session, authReady, onOpenAuth }) => {
   const [lastSubmitted, setLastSubmitted] = useState(null);
   const [fileInputsKey, setFileInputsKey] = useState(0);
   const [submissions, setSubmissions] = useState(null);
+  const [usage, setUsage] = useState(null);
 
   useEffect(() => {
     document.title = "Submit Music | EklautA Records";
@@ -241,6 +243,12 @@ const SubmitPage = ({ session, authReady, onOpenAuth }) => {
           setSubmissions(loadError ? [] : data);
         }
       });
+
+    getUploadUsage().then((result) => {
+      if (!cancelled) {
+        setUsage(result);
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -324,6 +332,29 @@ const SubmitPage = ({ session, authReady, onOpenAuth }) => {
 
     setError("");
 
+    // Check the artist's limits before uploading anything.
+    const latestUsage = await getUploadUsage();
+    if (latestUsage) {
+      setUsage(latestUsage);
+      const { limits } = latestUsage;
+      if (latestUsage.pending_submissions >= limits.max_pending_submissions) {
+        setError(
+          `You already have ${limits.max_pending_submissions} submissions waiting for review. Please wait for the label to review them before sending more.`
+        );
+        return;
+      }
+      if (latestUsage.submissions_today >= limits.max_submissions_per_day) {
+        setError(`You can submit up to ${limits.max_submissions_per_day} tracks a day. Please try again tomorrow.`);
+        return;
+      }
+      if (audioFile.size + posterFile.size > bytesLeft(latestUsage, "submissions")) {
+        setError(
+          `This upload would go over your ${formatMegabytes(limits.bytes.submissions)} storage allowance for submissions. Contact the label at eklautarecords@gmail.com to free up space.`
+        );
+        return;
+      }
+    }
+
     const submissionId = crypto.randomUUID();
     const folder = `${user.id}/${submissionId}`;
     const audioExtension = getExtension(audioFile);
@@ -372,9 +403,13 @@ const SubmitPage = ({ session, authReady, onOpenAuth }) => {
     } catch (submitError) {
       console.error(submitError);
       setError(
-        /maximum allowed size/i.test(submitError.message ?? "")
-          ? "That file is too large to upload. Audio must be 50 MB or smaller."
-          : "Something went wrong while submitting. Please check your connection and try again."
+        submitError.hint === "submission_limit"
+          ? submitError.message
+          : /maximum allowed size/i.test(submitError.message ?? "")
+            ? "That file is too large to upload. Audio must be 50 MB or smaller."
+            : isStorageRefusal(submitError)
+              ? "You've reached your storage allowance for submissions. Contact the label at eklautarecords@gmail.com to free up space."
+              : "Something went wrong while submitting. Please check your connection and try again."
       );
     } finally {
       setProgress("");
@@ -662,6 +697,12 @@ const SubmitPage = ({ session, authReady, onOpenAuth }) => {
                 </p>
               ) : null}
             </div>
+            {usage ? (
+              <p className="text-xs text-stone-500">
+                You have {usage.pending_submissions} of {usage.limits.max_pending_submissions} submissions waiting
+                for review, and can send up to {usage.limits.max_submissions_per_day} a day.
+              </p>
+            ) : null}
           </form>
         </div>
 
