@@ -46,7 +46,7 @@ export const SignInPrompt = ({ message, onOpenAuth }) => {
 
 export const Tabs = ({ tabs, value, onChange }) => {
   return (
-    <div className="mb-10 flex gap-1 overflow-x-auto border-b border-white/10 sm:gap-2" role="tablist">
+    <div className="mb-10 flex flex-wrap gap-x-1 border-b border-white/10 sm:gap-x-2" role="tablist">
       {tabs.map((option) => (
         <button
           key={option.value}

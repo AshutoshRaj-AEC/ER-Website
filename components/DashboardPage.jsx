@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import GrowthTracker from "./GrowthTracker";
 import SongVault from "./SongVault";
 import { LoadingText, PageShell, Panel, SignInPrompt, Tabs } from "./PageShell";
@@ -7,18 +7,22 @@ import PlanList from "./PlanList";
 import { getUserProfile, supabase } from "../lib/supabase";
 import { PLAN_LIST_SELECT } from "../lib/releasePlans";
 
+// Insights is large and only needed on its tab, so it loads on demand.
+const InsightsTab = lazy(() => import("./insights/InsightsTab"));
+
 const getPlanIdFromUrl = () =>
   new URLSearchParams(window.location.search).get("plan");
 
 const getTabFromUrl = () => {
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return tab === "growth" || tab === "vault" ? tab : "plans";
+  return ["growth", "vault", "insights"].includes(tab) ? tab : "plans";
 };
 
 const TABS = [
   { value: "plans", label: "Release plans" },
   { value: "growth", label: "Growth" },
   { value: "vault", label: "Song vault" },
+  { value: "insights", label: "Spotify Insights" },
 ];
 
 const inputClass =
@@ -247,6 +251,14 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
         message="Sign in with Google to plan your releases and budgets."
         onOpenAuth={onOpenAuth}
       />
+    );
+  }
+
+  if (tab === "insights") {
+    return shell(
+      <Suspense fallback={<LoadingText />}>
+        <InsightsTab userId={user.id} />
+      </Suspense>
     );
   }
 
