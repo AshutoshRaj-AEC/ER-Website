@@ -78,7 +78,7 @@ describe("cell parsing", () => {
 
   it("parses supported date formats and rejects impossible dates", () => {
     expect(parseDateValue("2026-10-01").value).toBe("2026-10-01");
-    expect(parseDateValue("2026-10-01T00:00:00Z")).toEqual({ value: "2026-10-01", hadTime: false });
+    expect(parseDateValue("2026-10-01T00:00:00Z")).toEqual({ value: "2026-10-01", hadTime: false, precision: "day" });
     expect(parseDateValue("2026-10-01 14:30").hadTime).toBe(true);
     expect(parseDateValue("25/10/2026", "dmy").value).toBe("2026-10-25");
     expect(parseDateValue("10/25/2026", "mdy").value).toBe("2026-10-25");
@@ -177,6 +177,40 @@ describe("normalizeRecords", () => {
     const result = normalizeRecords({ typeId: "audience_timeline", headers, records });
     expect(result.duplicates).toBe(1);
     expect(result.issues.some((issue) => issue.message.includes("Only the last one"))).toBe(true);
+  });
+
+  it("keeps year-only and year-month release dates with their precision", () => {
+    const { headers, records } = load("song,streams,release_date\nOld Song,10,2023\nMid Song,5,2024-05\nNew Song,7,2026-03-01\nNo Date,3,n/a\n");
+    const result = normalizeRecords({
+      typeId: "songs_summary",
+      headers,
+      records,
+      options: { period: { preset: "7d", end: "2026-10-11" } },
+    });
+    expect(result.period.map((row) => [row.release_date, row.release_precision])).toEqual([
+      ["2023-01-01", "year"],
+      ["2024-05-01", "month"],
+      ["2026-03-01", "day"],
+      [null, null],
+    ]);
+    expect(result.issues).toEqual([]);
+  });
+
+  it("treats n/a in optional date columns as unknown without warnings", () => {
+    const { headers, records } = load("title,author,listeners,streams,date_added\nAlgorithmic Mix,Spotify,10,20,n/a\n");
+    const result = normalizeRecords({
+      typeId: "playlists_summary",
+      headers,
+      records,
+      options: { period: { preset: "7d", end: "2026-10-11" } },
+    });
+    expect(result.period[0].added_date).toBeNull();
+    expect(result.issues).toEqual([]);
+  });
+
+  it("doesn't accept a bare year as a daily timeline date", () => {
+    const { headers, records } = load("date,streams\n2026,10\n");
+    expect(normalizeRecords({ typeId: "audience_timeline", headers, records }).daily).toHaveLength(0);
   });
 
   it("normalises country codes and keeps country as a dimension", () => {
