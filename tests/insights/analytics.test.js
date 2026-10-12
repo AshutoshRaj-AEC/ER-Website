@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   buildDailySeries,
+  formatReleaseDate,
   listPeriods,
   matchPeriodToFilter,
   paginate,
@@ -170,6 +171,15 @@ describe("reporting periods", () => {
     ];
     const [song] = songsFromDaily(songDays, { start: "2026-10-22", end: "2026-10-28" });
     expect(song).toMatchObject({ name: "A", streams: 12, listeners: 3, listenersAreDailyAverage: true });
+  });
+});
+
+describe("formatReleaseDate", () => {
+  it("never shows more precision than the export had", () => {
+    expect(formatReleaseDate("2023-01-01", "year")).toBe("2023");
+    expect(formatReleaseDate("2024-05-01", "month")).toMatch(/May.*2024/);
+    expect(formatReleaseDate("2026-03-01", "day")).toMatch(/1 Mar.*2026/);
+    expect(formatReleaseDate(null, null)).toBe("—");
   });
 });
 

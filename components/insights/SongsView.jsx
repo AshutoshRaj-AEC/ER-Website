@@ -6,7 +6,7 @@ import TrendChart from "./TrendChart";
 import { Callout, Section } from "./shared";
 import {
   buildDailySeries,
-  formatDay,
+  formatReleaseDate,
   listPeriods,
   matchPeriodToFilter,
   metricsPresent,
@@ -120,7 +120,7 @@ const SongDetail = ({ songKey, data, filters, source, onBack }) => {
       </button>
       <div>
         <h2 className="font-['Space_Grotesk'] text-3xl font-bold uppercase tracking-[0.06em] text-white">{name}</h2>
-        {song?.release_date ? <p className="mt-1 text-sm text-stone-400">Released {formatDay(song.release_date)}</p> : null}
+        {song?.release_date ? <p className="mt-1 text-sm text-stone-400">Released {formatReleaseDate(song.release_date, song.release_precision)}</p> : null}
       </div>
 
       {song ? (
@@ -258,7 +258,14 @@ const SongsView = ({ data, filters, periodOverride, onPeriodOverride, selectedSo
       : []),
     ...(present.includes("saves") ? [{ key: "saves", label: "Saves", numeric: true, definition: METRICS.saves.definition, format: (row) => formatCount(row.saves) }] : []),
     ...(present.includes("playlist_adds") ? [{ key: "playlist_adds", label: "Playlist adds", numeric: true, definition: METRICS.playlist_adds.definition, format: (row) => formatCount(row.playlist_adds) }] : []),
-    ...(hasRelease ? [{ key: "release_date", label: "Released", format: (row) => (row.release_date ? formatDay(row.release_date) : "—") }] : []),
+    ...(hasRelease
+      ? [{
+          key: "release_date",
+          label: "Released",
+          format: (row) => formatReleaseDate(row.release_date, row.release_precision),
+          exportValue: (row) => (row.release_precision === "year" ? row.release_date?.slice(0, 4) : row.release_precision === "month" ? row.release_date?.slice(0, 7) : row.release_date),
+        }]
+      : []),
   ];
 
   return (

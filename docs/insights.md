@@ -41,6 +41,11 @@ day. All-time periods are stored with `period_start = '-infinity'`.
 - Dates: ISO (`2026-10-01`, optional time; times are dropped with a warning),
   `d/m/Y` or `m/d/Y` (order detected from the whole column; ambiguous files ask
   the artist), `1 Oct 2026`, `Oct 1, 2026`. Impossible dates are rejected.
+- Release dates may be a year (`2023`) or year-month (`2023-05`), as Spotify
+  exports for some older releases. They're stored as the first day with a
+  `release_precision` of `year`/`month` and displayed as "2023" / "May 2023".
+- Optional date columns (release date, date added) treat `n/a` and similar as
+  unknown without a warning; Spotify uses `n/a` for some playlists.
 - CSV contents are only ever treated as text. Exports prefix values starting
   with `= + - @` with `'` so spreadsheets don't run them as formulas.
 
