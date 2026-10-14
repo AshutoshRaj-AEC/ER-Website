@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import ArtistHome from "./ArtistHome";
 import GrowthTracker from "./GrowthTracker";
 import SongVault from "./SongVault";
 import { LoadingText, PageShell, Panel, SignInPrompt, Tabs } from "./PageShell";
@@ -14,11 +15,14 @@ const getPlanIdFromUrl = () =>
   new URLSearchParams(window.location.search).get("plan");
 
 const getTabFromUrl = () => {
-  const tab = new URLSearchParams(window.location.search).get("tab");
-  return ["growth", "vault", "insights"].includes(tab) ? tab : "plans";
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get("tab");
+  if (["plans", "growth", "vault", "insights"].includes(tab)) return tab;
+  return params.get("plan") ? "plans" : "home";
 };
 
 const TABS = [
+  { value: "home", label: "Home" },
   { value: "plans", label: "Release plans" },
   { value: "growth", label: "Growth" },
   { value: "vault", label: "Song vault" },
@@ -182,7 +186,7 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
   }, [user?.id, selectedPlanId, tab, reloadKey]);
 
   const selectTab = (nextTab) => {
-    window.history.pushState({}, "", nextTab === "plans" ? "/dashboard" : `/dashboard?tab=${nextTab}`);
+    window.history.pushState({}, "", nextTab === "home" ? "/dashboard" : `/dashboard?tab=${nextTab}`);
     setTab(nextTab);
     setSelectedPlanId(null);
   };
@@ -194,7 +198,7 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
   };
 
   const closePlan = () => {
-    window.history.pushState({}, "", "/dashboard");
+    window.history.pushState({}, "", "/dashboard?tab=plans");
     setSelectedPlanId(null);
     setReloadKey((current) => current + 1);
     window.scrollTo({ top: 0 });
@@ -252,6 +256,10 @@ const DashboardPage = ({ session, authReady, onOpenAuth }) => {
         onOpenAuth={onOpenAuth}
       />
     );
+  }
+
+  if (tab === "home") {
+    return shell(<ArtistHome userId={user.id} onSelectTab={selectTab} />);
   }
 
   if (tab === "insights") {

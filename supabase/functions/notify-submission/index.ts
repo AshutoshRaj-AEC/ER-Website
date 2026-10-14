@@ -26,8 +26,11 @@ Deno.serve(async (req) => {
   }
 
   let submissionId: unknown;
+  let resubmitted = false;
   try {
-    ({ submission_id: submissionId } = await req.json());
+    const body = await req.json();
+    submissionId = body.submission_id;
+    resubmitted = body.resubmitted === true;
   } catch {
     return new Response("Invalid JSON", { status: 400 });
   }
@@ -91,10 +94,10 @@ Deno.serve(async (req) => {
       from: FROM_EMAIL,
       to: [ADMIN_EMAIL],
       reply_to: submission.contact_email,
-      subject: `New submission: ${submission.track_title} by ${submission.artist_name}`,
+      subject: `${resubmitted ? "Resubmitted" : "New submission"}: ${submission.track_title} by ${submission.artist_name}`,
       html: `
         <div style="font-family:Arial,sans-serif;font-size:14px;color:#1c1917">
-          <h2 style="margin:0 0 16px">New music submission</h2>
+          <h2 style="margin:0 0 16px">${resubmitted ? "Resubmitted with the changes you asked for" : "New music submission"}</h2>
           <table style="border-collapse:collapse">${rows}</table>
           <p style="margin:24px 0">
             <a href="${REVIEW_URL}" style="background:#f97316;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:bold">Review submission</a>

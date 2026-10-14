@@ -48,6 +48,15 @@ const TEMPLATES: Record<
     ],
     cta: { label: "Open your release checklist", href: `${SITE_URL}/dashboard` },
   }),
+  changes_requested: (s) => ({
+    subject: `Changes needed: “${s.track_title}”`,
+    heading: "A few changes before we can go ahead",
+    paragraphs: [
+      `Thanks for sending “${s.track_title}”, ${s.artist_name}. Before the label can approve it, a few things need fixing. The note below explains what.`,
+      "Open your submission, make the changes and resubmit. You don't need to start a new submission.",
+    ],
+    cta: { label: "Fix and resubmit", href: `${SITE_URL}/submit` },
+  }),
   rejected: (s) => ({
     subject: `An update on “${s.track_title}”`,
     heading: "An update on your submission",
