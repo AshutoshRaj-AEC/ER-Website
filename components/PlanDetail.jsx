@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AutoSaveInput, fieldClass } from "./AutoSaveField";
 import { LoadingText, Panel } from "./PageShell";
+import ReleaseTasks from "./ReleaseTasks";
 import StatusBadge from "./StatusBadge";
 import { supabase } from "../lib/supabase";
 import {
@@ -19,7 +20,7 @@ import {
   sumBudget,
 } from "../lib/releasePlans";
 
-const PLAN_SELECT = "*, submission:submissions(id, status, track_title)";
+const PLAN_SELECT = "*, submission:submissions(id, status, track_title, genre)";
 
 const inputClass = fieldClass;
 
@@ -482,6 +483,7 @@ const PlanDetail = ({ planId, readOnly = false, onBack, onDeleted }) => {
   const [plan, setPlan] = useState(null);
   const [items, setItems] = useState([]);
   const [completions, setCompletions] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [linkableSubmissions, setLinkableSubmissions] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
@@ -490,7 +492,7 @@ const PlanDetail = ({ planId, readOnly = false, onBack, onDeleted }) => {
     let cancelled = false;
 
     const load = async () => {
-      const [planResult, itemsResult, completionsResult] = await Promise.all([
+      const [planResult, itemsResult, completionsResult, tasksResult] = await Promise.all([
         supabase.from("release_plans").select(PLAN_SELECT).eq("id", planId).maybeSingle(),
         supabase
           .from("budget_items")
@@ -498,13 +500,14 @@ const PlanDetail = ({ planId, readOnly = false, onBack, onDeleted }) => {
           .eq("plan_id", planId)
           .order("created_at"),
         supabase.from("checklist_completions").select("task_key").eq("plan_id", planId),
+        supabase.from("release_plan_tasks").select("*").eq("plan_id", planId).order("due_date"),
       ]);
 
       if (cancelled) {
         return;
       }
 
-      if (planResult.error || itemsResult.error || completionsResult.error) {
+      if (planResult.error || itemsResult.error || completionsResult.error || tasksResult.error) {
         setLoadError("Couldn't load this plan. Refresh to try again.");
         return;
       }
@@ -517,6 +520,7 @@ const PlanDetail = ({ planId, readOnly = false, onBack, onDeleted }) => {
       setPlan(planResult.data);
       setItems(itemsResult.data);
       setCompletions(completionsResult.data);
+      setTasks(tasksResult.data);
 
       if (!readOnly) {
         // The artist's own submissions that aren't linked to another plan.
@@ -621,6 +625,43 @@ const PlanDetail = ({ planId, readOnly = false, onBack, onDeleted }) => {
     }
   };
 
+  // Campaign and custom tasks. Campaign settings are saved with the plan so
+  // the generator remembers the artist's choices.
+  const addTasks = async (newTasks, campaignSettings) => {
+    const { data, error } = await supabase
+      .from("release_plan_tasks")
+      .insert(newTasks.map((task) => ({ ...task, plan_id: planId })))
+      .select();
+    if (error) {
+      setSaveMessage(/up to 150 tasks/.test(error.message) ? "A plan can have up to 150 tasks." : "Couldn't add those tasks. Please try again.");
+      return false;
+    }
+    setTasks((current) => [...current, ...data]);
+    setSaveMessage(`Added ${data.length} task${data.length === 1 ? "" : "s"}`);
+    if (campaignSettings) {
+      await supabase.from("release_plans").update({ campaign_settings: campaignSettings }).eq("id", planId);
+      setPlan((current) => ({ ...current, campaign_settings: campaignSettings }));
+    }
+    return true;
+  };
+
+  const updateTask = async (id, changes) => {
+    const { data, error } = await supabase.from("release_plan_tasks").update(changes).eq("id", id).select().single();
+    reportSave(error);
+    if (!error) {
+      setTasks((current) => current.map((task) => (task.id === id ? data : task)));
+    }
+  };
+
+  const deleteTask = async (task) => {
+    if (!window.confirm(`Delete the task "${task.title}"?`)) return;
+    const { error } = await supabase.from("release_plan_tasks").delete().eq("id", task.id);
+    reportSave(error);
+    if (!error) {
+      setTasks((current) => current.filter((entry) => entry.id !== task.id));
+    }
+  };
+
   const deletePlan = async () => {
     if (!window.confirm(`Delete the plan for "${plan.title}"? This can't be undone.`)) {
       return;
@@ -665,7 +706,7 @@ const PlanDetail = ({ planId, readOnly = false, onBack, onDeleted }) => {
         {backButton}
         {saveMessage ? (
           <p
-            className={`text-sm ${saveMessage === "Saved" ? "text-stone-500" : "text-red-300"}`}
+            className={`text-sm ${/^(Couldn't|A plan can)/.test(saveMessage) ? "text-red-300" : "text-stone-500"}`}
             aria-live="polite"
           >
             {saveMessage}
@@ -711,6 +752,15 @@ const PlanDetail = ({ planId, readOnly = false, onBack, onDeleted }) => {
         completions={completions}
         readOnly={readOnly}
         onToggle={toggleTask}
+      />
+      <ReleaseTasks
+        plan={plan}
+        items={items}
+        tasks={tasks}
+        readOnly={readOnly}
+        onAddTasks={addTasks}
+        onUpdateTask={updateTask}
+        onDeleteTask={deleteTask}
       />
 
       {readOnly ? null : (
