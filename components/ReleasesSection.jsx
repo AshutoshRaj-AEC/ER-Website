@@ -52,113 +52,108 @@ const ChevronRight = ({ className = "", size = 28 }) => (
   </svg>
 );
 
+const INSTAGRAM = "https://www.instagram.com/eklautarecords/";
+
+// Real store links for each release. Leave a platform out when the release
+// isn't on it, and the card won't show that button.
+const storeLinks = ({ spotify, appleMusic, ytMusic, youtube }) => ({
+  listenLinks: [
+    spotify && { label: "Spotify", href: spotify },
+    appleMusic && { label: "Apple Music", href: appleMusic },
+    ytMusic && { label: "YT Music", href: ytMusic },
+  ].filter(Boolean),
+  watchLinks: [
+    youtube && { label: "YouTube", href: youtube },
+    { label: "Instagram", href: INSTAGRAM },
+  ].filter(Boolean),
+});
+
 const releases = [
   {
     title: "Aigiri Nandini X Aatma Rama",
     type: "Music Video",
     image: poster(aigiriNandiniPosterSmall, aigiriNandiniPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      {
-        label: "YouTube",
-        href: "https://youtu.be/KAe4mdXyhXk?si=tSdJN6pEruaiBKR_%3Fsub_confirmation%3D1",
-      },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/2sguqrHeToWvUEKj74j1H3",
+      ytMusic: "https://music.youtube.com/browse/MPREb_XWdGOLid4xC",
+      youtube: "https://www.youtube.com/watch?v=Cj9nekOl7Nc",
+    }),
   },
   {
     title: "Aiso Deen Dayal",
     type: "Single",
     image: poster(aisoDeenDayalPosterSmall, aisoDeenDayalPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      { label: "YouTube", href: "https://www.youtube.com/" },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/2EjsWInd6xOiyTWwGezlSR",
+      appleMusic: "https://music.apple.com/in/album/aiso-deen-dayal-dhan-dhan-bholenath/1777589376",
+      ytMusic: "https://music.youtube.com/browse/MPREb_YXu6ZLfNFtK",
+      youtube: "https://www.youtube.com/watch?v=rpLueWm6ON4",
+    }),
   },
   {
     title: "Anant Shruti",
     type: "Album",
     image: poster(anantShrutiPosterSmall, anantShrutiPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      { label: "YouTube", href: "https://www.youtube.com/" },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/1ZWSIqsSxvCrgoumeXJdAx",
+      appleMusic: "https://music.apple.com/in/album/anant-shruti/6768676155",
+      ytMusic: "https://music.youtube.com/playlist?list=OLAK5uy_nI-kH_ZGOJmQfs8X3CFJaEbnsrspgw18s",
+      youtube: "https://www.youtube.com/playlist?list=OLAK5uy_nI-kH_ZGOJmQfs8X3CFJaEbnsrspgw18s",
+    }),
   },
   {
     title: "Bhola",
     type: "Instagram Reel",
     image: poster(bholaPosterSmall, bholaPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      { label: "YouTube", href: "https://www.youtube.com/" },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/49HbFSNrITGxfo7IWpD3Le",
+      ytMusic: "https://music.youtube.com/browse/MPREb_WTVM6glEdFp",
+      youtube: "https://www.youtube.com/watch?v=OC4Z1cA_2X4",
+    }),
   },
   {
     title: "Chandrachooda Shiva Shankara Parvati",
     type: "Single",
     image: poster(chandrachoodaPosterSmall, chandrachoodaPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      { label: "YouTube", href: "https://www.youtube.com/" },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/18wBlMBWx83h3bkKA2mPv5",
+      appleMusic: "https://music.apple.com/in/album/chandrachooda-shiva-shankara-parvati/1836521105",
+      ytMusic: "https://music.youtube.com/browse/MPREb_4tFJgZSiBgi",
+      youtube: "https://www.youtube.com/watch?v=_55dDdCu_us",
+    }),
   },
   {
     title: "Durga Shakti",
     type: "Music Video",
     image: poster(durgaShaktiPosterSmall, durgaShaktiPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      { label: "YouTube", href: "https://www.youtube.com/" },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/1g9NLtndm7ZzWH7ZOIO4Xi",
+      appleMusic: "https://music.apple.com/in/album/durga-shakti-sarva-mangal-mangalye/1841693574",
+      ytMusic: "https://music.youtube.com/browse/MPREb_olr09B5W5U7",
+      youtube: "https://www.youtube.com/watch?v=IG3Oxk7ohMg",
+    }),
   },
   {
     title: "Hey Maruti",
     type: "Single",
     image: poster(heyMarutiPosterSmall, heyMarutiPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      { label: "YouTube", href: "https://www.youtube.com/" },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/5GXqRVsL8rITYs5ddu3urk",
+      appleMusic: "https://music.apple.com/in/album/hey-maruti/1773328373",
+      ytMusic: "https://music.youtube.com/browse/MPREb_1nKOIQfYQHR",
+      youtube: "https://www.youtube.com/watch?v=mQGBaq5Lb-Y",
+    }),
   },
   {
     title: "Kalyug Vs Mahadev",
     type: "Release",
     image: poster(kalyugVsMahadevPosterSmall, kalyugVsMahadevPosterLarge),
-    listenLinks: [
-      { label: "Spotify", href: "https://open.spotify.com/" },
-      { label: "YT Music", href: "https://music.youtube.com/" },
-    ],
-    watchLinks: [
-      { label: "YouTube", href: "https://www.youtube.com/" },
-      { label: "Instagram", href: "https://www.instagram.com/eklautarecords/" },
-    ],
+    ...storeLinks({
+      spotify: "https://open.spotify.com/album/2tIX5VdsYzkBSAqQKqjofN",
+      appleMusic: "https://music.apple.com/in/album/kalyug-vs-mahadev/1734241529",
+      ytMusic: "https://music.youtube.com/browse/MPREb_0PzJqQHqYQ2",
+      youtube: "https://www.youtube.com/watch?v=Xeg-nLmJ9G8",
+    }),
   },
 ];
 
