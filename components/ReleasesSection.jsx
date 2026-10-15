@@ -1,12 +1,24 @@
 import { useRef } from "react";
-import aigiriNandiniPoster from "../Posters/Aigiri Nandini X Aatma Rama.jpg";
-import aisoDeenDayalPoster from "../Posters/Aiso Deen Dayal (Dhan Dhan Bholenath).png";
-import anantShrutiPoster from "../Posters/Anant Shruti enhanced.jpg";
-import bholaPoster from "../Posters/Bhola.jpg";
-import chandrachoodaPoster from "../Posters/Chandrachooda Shiva Shankara Parvati.jpg";
-import durgaShaktiPoster from "../Posters/Durga Shakti (Sarva Mangal Mangalye).jpg";
-import heyMarutiPoster from "../Posters/Hey Maruti.jpg";
-import kalyugVsMahadevPoster from "../Posters/Kalyug Vs Mahadev.png";
+import aigiriNandiniPosterSmall from "../Posters/web/aigiri-nandini-x-aatma-rama-480.webp";
+import aigiriNandiniPosterLarge from "../Posters/web/aigiri-nandini-x-aatma-rama-960.webp";
+import aisoDeenDayalPosterSmall from "../Posters/web/aiso-deen-dayal-dhan-dhan-bholenath-480.webp";
+import aisoDeenDayalPosterLarge from "../Posters/web/aiso-deen-dayal-dhan-dhan-bholenath-960.webp";
+import anantShrutiPosterSmall from "../Posters/web/anant-shruti-enhanced-480.webp";
+import anantShrutiPosterLarge from "../Posters/web/anant-shruti-enhanced-960.webp";
+import bholaPosterSmall from "../Posters/web/bhola-480.webp";
+import bholaPosterLarge from "../Posters/web/bhola-960.webp";
+import chandrachoodaPosterSmall from "../Posters/web/chandrachooda-shiva-shankara-parvati-480.webp";
+import chandrachoodaPosterLarge from "../Posters/web/chandrachooda-shiva-shankara-parvati-960.webp";
+import durgaShaktiPosterSmall from "../Posters/web/durga-shakti-sarva-mangal-mangalye-480.webp";
+import durgaShaktiPosterLarge from "../Posters/web/durga-shakti-sarva-mangal-mangalye-960.webp";
+import heyMarutiPosterSmall from "../Posters/web/hey-maruti-480.webp";
+import heyMarutiPosterLarge from "../Posters/web/hey-maruti-960.webp";
+import kalyugVsMahadevPosterSmall from "../Posters/web/kalyug-vs-mahadev-480.webp";
+import kalyugVsMahadevPosterLarge from "../Posters/web/kalyug-vs-mahadev-960.webp";
+
+// Posters are served as small WebP copies made by scripts/optimize-posters.py;
+// the browser picks 480 or 960 px depending on the card size and screen.
+const poster = (small, large) => ({ src: small, srcSet: `${small} 480w, ${large} 960w` });
 
 const ChevronLeft = ({ className = "", size = 28 }) => (
   <svg
@@ -44,7 +56,7 @@ const releases = [
   {
     title: "Aigiri Nandini X Aatma Rama",
     type: "Music Video",
-    image: aigiriNandiniPoster,
+    image: poster(aigiriNandiniPosterSmall, aigiriNandiniPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -60,7 +72,7 @@ const releases = [
   {
     title: "Aiso Deen Dayal",
     type: "Single",
-    image: aisoDeenDayalPoster,
+    image: poster(aisoDeenDayalPosterSmall, aisoDeenDayalPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -73,7 +85,7 @@ const releases = [
   {
     title: "Anant Shruti",
     type: "Album",
-    image: anantShrutiPoster,
+    image: poster(anantShrutiPosterSmall, anantShrutiPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -86,7 +98,7 @@ const releases = [
   {
     title: "Bhola",
     type: "Instagram Reel",
-    image: bholaPoster,
+    image: poster(bholaPosterSmall, bholaPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -99,7 +111,7 @@ const releases = [
   {
     title: "Chandrachooda Shiva Shankara Parvati",
     type: "Single",
-    image: chandrachoodaPoster,
+    image: poster(chandrachoodaPosterSmall, chandrachoodaPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -112,7 +124,7 @@ const releases = [
   {
     title: "Durga Shakti",
     type: "Music Video",
-    image: durgaShaktiPoster,
+    image: poster(durgaShaktiPosterSmall, durgaShaktiPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -125,7 +137,7 @@ const releases = [
   {
     title: "Hey Maruti",
     type: "Single",
-    image: heyMarutiPoster,
+    image: poster(heyMarutiPosterSmall, heyMarutiPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -138,7 +150,7 @@ const releases = [
   {
     title: "Kalyug Vs Mahadev",
     type: "Release",
-    image: kalyugVsMahadevPoster,
+    image: poster(kalyugVsMahadevPosterSmall, kalyugVsMahadevPosterLarge),
     listenLinks: [
       { label: "Spotify", href: "https://open.spotify.com/" },
       { label: "YT Music", href: "https://music.youtube.com/" },
@@ -247,11 +259,14 @@ const ReleasesSection = () => {
                 >
                   <div className="overflow-hidden bg-black">
                     <img
-                      src={release.image}
+                      src={release.image.src}
+                      srcSet={release.image.srcSet}
+                      sizes="(min-width: 768px) 320px, (min-width: 640px) 55vw, 85vw"
                       alt={release.title}
-                      width="900"
-                      height="900"
+                      width="480"
+                      height="480"
                       loading="lazy"
+                      decoding="async"
                       className="aspect-square w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                   </div>
